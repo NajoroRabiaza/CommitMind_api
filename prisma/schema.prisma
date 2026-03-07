@@ -9,3 +9,89 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id          Int          @id @default(autoincrement())
+  githubId    String       @unique
+  username    String
+  email       String?
+  avatarUrl   String?
+  accessToken String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  repositories Repository[]
+  concepts     Concept[]
+}
+
+model Repository {
+  id           Int      @id @default(autoincrement())
+  githubId     Int      @unique
+  name         String
+  fullName     String
+  description  String?
+  private      Boolean  @default(false)
+  lastSyncedAt DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  commits Commit[]
+}
+
+model Commit {
+  id           Int      @id @default(autoincrement())
+  sha          String   @unique
+  message      String
+  authorName   String
+  authorEmail  String
+  committedAt  DateTime
+  url          String?
+  createdAt    DateTime @default(now())
+
+  repositoryId Int
+  repository   Repository @relation(fields: [repositoryId], references: [id])
+
+  files    CommitFile[]
+  concepts CommitConcept[]
+}
+
+model CommitFile {
+  id        Int    @id @default(autoincrement())
+  filename  String
+  status    String
+  additions Int    @default(0)
+  deletions Int    @default(0)
+  patch     String?
+
+  commitId Int
+  commit   Commit @relation(fields: [commitId], references: [id])
+}
+
+model Concept {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  commits CommitConcept[]
+}
+
+model CommitConcept {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  commitId  Int
+  commit    Commit  @relation(fields: [commitId], references: [id])
+
+  conceptId Int
+  concept   Concept @relation(fields: [conceptId], references: [id])
+
+  @@unique([commitId, conceptId])
+}

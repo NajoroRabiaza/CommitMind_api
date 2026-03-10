@@ -1,9 +1,17 @@
-const express = require('express');
-const healthRouter = require('./routes/health');
-const app = express();
+const express = require('express')
+const session = require('express-session')
+const passport = require('./middleware/passport')
+const healthRouter = require('./routes/health')
+const app = express()
 
-// Middleware pour lire les JSON dans les requetes
-app.use(express.json());
+app.use(express.json())
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false
+}))
+
+app.use(passport.initialize())
+app.use(passport.session())
 app.use(healthRouter)
-module.exports = app;
-
+module.exports = app

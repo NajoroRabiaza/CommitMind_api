@@ -46,4 +46,19 @@ router.get('/auth/me', isAuthenticated, (req, res) => {
     })
 })
 
+// Route de déconnexion
+router.get('/auth/logout', isAuthenticated, (req, res) => {
+    req.logout((err) => {
+        if (err) {
+            return res.status(500).json({
+                message: 'Error during logout'
+            })
+        }
+
+        res.json({
+            message: 'Logout successful'
+        })
+    })
+})
+
 module.exports = router;

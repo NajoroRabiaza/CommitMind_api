@@ -1,5 +1,6 @@
 const express = require('express');
 const passport = require('passport');
+const isAuthenticated = require('../middleware/isAuthenticated');
 const router = express.Router();
 
 // Route 1 : l'utilisateur clique "Login with Github"
@@ -31,6 +32,17 @@ router.get('/auth/github/callback',
 router.get('/auth/failure', (req, res) => {
     res.status(401).json({
         message: 'Authentication Failed'
+    })
+})
+
+// Route protégé pour tester le middleware
+router.get('/auth/me', isAuthenticated, (req, res) => {
+    res.json({
+        user: {
+            id: req.user.id,
+            username: req.user.username,
+            avatarUrl: req.user.avatarUrl
+        }
     })
 })
 

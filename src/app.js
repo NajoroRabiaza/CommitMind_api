@@ -3,6 +3,7 @@ const session = require('express-session')
 const passport = require('./middleware/passport')
 const healthRouter = require('./routes/health')
 const authRouter = require('./routes/auth')
+const repositoriesRouter = require('./routes/repositories')
 
 const app = express()
 
@@ -19,5 +20,6 @@ app.use(passport.session())
 
 app.use(healthRouter)
 app.use(authRouter)
+app.use(repositoriesRouter)
 
 module.exports = app

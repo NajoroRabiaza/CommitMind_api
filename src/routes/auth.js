@@ -1,6 +1,7 @@
 const express = require('express');
 const passport = require('passport');
 const isAuthenticated = require('../middleware/isAuthenticated');
+const { createGithubClient } = require('../services/githubService');
 const router = express.Router();
 
 // Route 1 : l'utilisateur clique "Login with Github"

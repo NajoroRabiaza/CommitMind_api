@@ -1,5 +1,5 @@
 const express = require('express')
-const isAuthenticated = require('../middleware/isAuthenticated')
+const jwtAuth = require('../middleware/jwtAuth')
 const {
   syncCommits,
   getCommits,
@@ -10,10 +10,10 @@ const { linkConceptToCommit } = require('../controllers/commitConceptController'
 
 const router = express.Router()
 
-router.post('/repositories/:repoId/commits/sync', isAuthenticated, syncCommits)
-router.get('/repositories/:repoId/commits', isAuthenticated, getCommits)
-router.post('/repositories/:repoId/commits/:commitId/files/sync', isAuthenticated, syncCommitFiles)
-router.get('/repositories/:repoId/commits/:commitId/files', isAuthenticated, getCommitFiles)
-router.post('/repositories/:repoId/commits/:commitId/concepts', isAuthenticated, linkConceptToCommit)
+router.post('/repositories/:repoId/commits/sync', jwtAuth, syncCommits)
+router.get('/repositories/:repoId/commits', jwtAuth, getCommits)
+router.post('/repositories/:repoId/commits/:commitId/files/sync', jwtAuth, syncCommitFiles)
+router.get('/repositories/:repoId/commits/:commitId/files', jwtAuth, getCommitFiles)
+router.post('/repositories/:repoId/commits/:commitId/concepts', jwtAuth, linkConceptToCommit)
 
 module.exports = router

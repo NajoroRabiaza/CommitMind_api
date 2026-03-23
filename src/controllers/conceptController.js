@@ -81,4 +81,52 @@ const deleteConcept = async (req, res) => {
   }
 }
 
-module.exports = { createConcept, getConcepts, getConceptById, deleteConcept }
+const getCommitsByConcept = async (req, res) => {
+    try {
+      const { conceptId } = req.params
+  
+      // Vérifier que le concept appartient à l'utilisateur connecté
+      const concept = await prisma.concept.findFirst({
+        where: {
+          id: parseInt(conceptId),
+          userId: req.user.id
+        }
+      })
+  
+      if (!concept) {
+        return res.status(404).json({ message: 'Concept not found' })
+      }
+  
+      // Récupérer tous les commits liés à ce concept
+      const commitConcepts = await prisma.commitConcept.findMany({
+        where: {
+          conceptId: concept.id
+        },
+        include: {
+          commit: {
+            include: {
+              files: true
+            }
+          }
+        },
+        orderBy: {
+          commit: {
+            committedAt: 'desc'
+          }
+        }
+      })
+  
+      // Reformater pour renvoyer directement les commits
+      const commits = commitConcepts.map(cc => cc.commit)
+  
+      res.json({
+        concept: concept.name,
+        totalCommits: commits.length,
+        commits
+      })
+    } catch (error) {
+      res.status(500).json({ message: error.message })
+    }
+  }
+
+module.exports = { createConcept, getConcepts, getConceptById, deleteConcept, getCommitsByConcept }

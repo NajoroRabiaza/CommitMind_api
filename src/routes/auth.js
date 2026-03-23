@@ -1,65 +1,57 @@
-const express = require('express');
-const passport = require('passport');
-const isAuthenticated = require('../middleware/isAuthenticated');
-const { createGithubClient } = require('../services/githubService');
-const router = express.Router();
+const express = require('express')
+const passport = require('passport')
+const jwt = require('jsonwebtoken')
+const jwtAuth = require('../middleware/jwtAuth')
+const router = express.Router()
 
-// Route 1 : l'utilisateur clique "Login with Github"
-// Passport redirige automatiquement vers Github
-router.get('/auth/github', 
-    passport.authenticate('github', {
-        scope: ['user:email', 'repo']
-    })
-);
-
-// Route 2 : Github renvoie l'utilisateur ici après son accord
-router.get('/auth/github/callback',
-    passport.authenticate('github', {
-        failureRedirect: '/auth/failure'
-    }),
-    (req, res) => {
-        res.json({
-            message: 'Login successful',
-            user: {
-                id: req.user.id,
-                username: req.user.username,
-                avatarUrl: req.user.avatarUrl
-            }
-        })
-    }
+router.get('/auth/github',
+  passport.authenticate('github', {
+    scope: ['user:email', 'repo'],
+    session: false
+  })
 )
 
-// Route 3 : si l'auth échoue
-router.get('/auth/failure', (req, res) => {
-    res.status(401).json({
-        message: 'Authentication Failed'
-    })
-})
+router.get('/auth/github/callback',
+  passport.authenticate('github', {
+    failureRedirect: '/auth/failure',
+    session: false
+  }),
+  (req, res) => {
+    // Génère le token JWT
+    const token = jwt.sign(
+      { userId: req.user.id },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    )
 
-// Route protégé pour tester le middleware
-router.get('/auth/me', isAuthenticated, (req, res) => {
     res.json({
-        user: {
-            id: req.user.id,
-            username: req.user.username,
-            avatarUrl: req.user.avatarUrl
-        }
+      message: 'Login successful',
+      token,
+      user: {
+        id: req.user.id,
+        username: req.user.username,
+        avatarUrl: req.user.avatarUrl
+      }
     })
+  }
+)
+
+router.get('/auth/failure', (req, res) => {
+  res.status(401).json({ message: 'Authentication Failed' })
 })
 
-// Route de déconnexion
-router.get('/auth/logout', isAuthenticated, (req, res) => {
-    req.logout((err) => {
-        if (err) {
-            return res.status(500).json({
-                message: 'Error during logout'
-            })
-        }
-
-        res.json({
-            message: 'Logout successful'
-        })
-    })
+router.get('/auth/me', jwtAuth, (req, res) => {
+  res.json({
+    user: {
+      id: req.user.id,
+      username: req.user.username,
+      avatarUrl: req.user.avatarUrl
+    }
+  })
 })
 
-module.exports = router;
+router.get('/auth/logout', (req, res) => {
+  res.json({ message: 'Logout successful. Delete your token.' })
+})
+
+module.exports = router

@@ -5,6 +5,7 @@ const authRouter = require('./routes/auth')
 const repositoriesRouter = require('./routes/repositories')
 const commitsRouter = require('./routes/commits')
 const conceptsRouter = require('./routes/concepts')
+const historyRouter = require('./routes/history')
 
 const app = express()
 
@@ -16,5 +17,6 @@ app.use(authRouter)
 app.use(repositoriesRouter)
 app.use(commitsRouter)
 app.use(conceptsRouter)
+app.use(historyRouter)
 
 module.exports = app

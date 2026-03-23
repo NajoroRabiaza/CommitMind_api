@@ -4,6 +4,7 @@ const passport = require('./middleware/passport')
 const healthRouter = require('./routes/health')
 const authRouter = require('./routes/auth')
 const repositoriesRouter = require('./routes/repositories')
+const commitsRouter = require('./routes/commits')
 
 const app = express()
 
@@ -21,5 +22,6 @@ app.use(passport.session())
 app.use(healthRouter)
 app.use(authRouter)
 app.use(repositoriesRouter)
+app.use(commitsRouter)
 
 module.exports = app

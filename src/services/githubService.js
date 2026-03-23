@@ -42,4 +42,27 @@ const getRepositoryCommits = async (accessToken, owner, repo) => {
   }))
 }
 
-module.exports = { createGithubClient, getUserRepositories, getRepositoryCommits }
+const getCommitDetail = async (accessToken, owner, repo, sha) => {
+	const octokit = createGithubClient(accessToken)
+  
+	const { data } = await octokit.repos.getCommit({
+	  owner: owner,
+	  repo: repo,
+	  ref: sha
+	})
+  
+	return data.files.map((file) => ({
+	  filename: file.filename,
+	  status: file.status,
+	  additions: file.additions,
+	  deletions: file.deletions,
+	  patch: file.patch || null
+	}))
+  }
+
+module.exports = {
+	createGithubClient,
+	getUserRepositories,
+	getRepositoryCommits,
+	getCommitDetail
+}

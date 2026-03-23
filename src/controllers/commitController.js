@@ -1,5 +1,5 @@
 const prisma = require('../utils/prisma')
-const { getRepositoryCommits } = require('../services/githubService')
+const { getRepositoryCommits, getCommitDetail } = require('../services/githubService')
 
 const syncCommits = async (req, res) => {
   try {
@@ -89,4 +89,100 @@ const getCommits = async (req, res) => {
   }
 }
 
-module.exports = { syncCommits, getCommits }
+const syncCommitFiles = async (req, res) => {
+    try {
+      const { repoId, commitId } = req.params
+  
+      const repository = await prisma.repository.findFirst({
+        where: {
+          id: parseInt(repoId),
+          userId: req.user.id
+        }
+      })
+  
+      if (!repository) {
+        return res.status(404).json({ message: 'Repository not found' })
+      }
+  
+      const commit = await prisma.commit.findFirst({
+        where: {
+          id: parseInt(commitId),
+          repositoryId: repository.id
+        }
+      })
+  
+      if (!commit) {
+        return res.status(404).json({ message: 'Commit not found' })
+      }
+  
+      const [owner, repo] = repository.fullName.split('/')
+  
+      const files = await getCommitDetail(
+        req.user.accessToken,
+        owner,
+        repo,
+        commit.sha
+      )
+  
+      const savedFiles = []
+  
+      for (const file of files) {
+        const saved = await prisma.commitFile.create({
+          data: {
+            filename: file.filename,
+            status: file.status,
+            additions: file.additions,
+            deletions: file.deletions,
+            patch: file.patch,
+            commitId: commit.id
+          }
+        })
+        savedFiles.push(saved)
+      }
+  
+      res.json({
+        message: `${savedFiles.length} files synced`,
+        files: savedFiles
+      })
+    } catch (error) {
+      res.status(500).json({ message: error.message })
+    }
+  }
+  
+  const getCommitFiles = async (req, res) => {
+    try {
+      const { repoId, commitId } = req.params
+  
+      const repository = await prisma.repository.findFirst({
+        where: {
+          id: parseInt(repoId),
+          userId: req.user.id
+        }
+      })
+  
+      if (!repository) {
+        return res.status(404).json({ message: 'Repository not found' })
+      }
+  
+      const commit = await prisma.commit.findFirst({
+        where: {
+          id: parseInt(commitId),
+          repositoryId: repository.id
+        }
+      })
+  
+      if (!commit) {
+        return res.status(404).json({ message: 'Commit not found' })
+      }
+  
+      const files = await prisma.commitFile.findMany({
+        where: { commitId: commit.id }
+      })
+  
+      res.json({ files })
+    } catch (error) {
+      res.status(500).json({ message: error.message })
+    }
+  }
+
+  module.exports = { syncCommits, getCommits, syncCommitFiles, getCommitFiles }

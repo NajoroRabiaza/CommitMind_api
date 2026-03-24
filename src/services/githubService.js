@@ -23,14 +23,20 @@ const getUserRepositories = async (accessToken) => {
   }))
 }
 
-const getRepositoryCommits = async (accessToken, owner, repo) => {
+const getRepositoryCommits = async (accessToken, owner, repo, since = null) => {
   const octokit = createGithubClient(accessToken)
 
-  const { data } = await octokit.repos.listCommits({
+  const params = {
     owner: owner,
     repo: repo,
     per_page: 100
-  })
+  }
+
+  if (since) {
+    params.since = since.toISOString()
+  }
+
+  const { data } = await octokit.repos.listCommits(params)
 
   return data.map((commit) => ({
     sha: commit.sha,

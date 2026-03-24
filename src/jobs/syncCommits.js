@@ -23,7 +23,8 @@ const syncAllUsersCommits = async () => {
           const commits = await getRepositoryCommits(
             user.accessToken,
             owner,
-            repo
+            repo,
+            repository.lastSyncedAt
           )
 
           let newCommitsCount = 0

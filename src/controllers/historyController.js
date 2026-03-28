@@ -2,14 +2,50 @@ const prisma = require('../utils/prisma')
 
 const getHistory = async (req, res) => {
   try {
-    // Récupère tous les commits de l'utilisateur
-    // avec leurs concepts et fichiers
-    const commits = await prisma.commit.findMany({
-      where: {
-        repository: {
-          userId: req.user.id
+    const { search, month, concept } = req.query
+
+    // Construction dynamique du filtre
+    const where = {
+      repository: {
+        userId: req.user.id
+      }
+    }
+
+    // Filtre par mot clé dans le message du commit
+    if (search) {
+      where.message = {
+        contains: search,
+        mode: 'insensitive'
+      }
+    }
+
+    // Filtre par mois (ex: "2026-03")
+    if (month) {
+      const [year, monthNumber] = month.split('-')
+      const start = new Date(parseInt(year), parseInt(monthNumber) - 1, 1)
+      const end = new Date(parseInt(year), parseInt(monthNumber), 1)
+      where.committedAt = {
+        gte: start,
+        lt: end
+      }
+    }
+
+    // Filtre par nom de concept
+    if (concept) {
+      where.concepts = {
+        some: {
+          concept: {
+            name: {
+              contains: concept,
+              mode: 'insensitive'
+            }
+          }
         }
-      },
+      }
+    }
+
+    const commits = await prisma.commit.findMany({
+      where,
       include: {
         concepts: {
           include: {
@@ -28,15 +64,13 @@ const getHistory = async (req, res) => {
       }
     })
 
-    // Grouper les commits par mois
+    // Grouper par mois
     const history = {}
 
     for (const commit of commits) {
-      // Créer la clé du mois : "2026-03"
       const date = new Date(commit.committedAt)
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 
-      // Créer le groupe si il n'existe pas encore
       if (!history[monthKey]) {
         history[monthKey] = {
           month: monthKey,
@@ -45,7 +79,6 @@ const getHistory = async (req, res) => {
         }
       }
 
-      // Reformater le commit
       const formattedCommit = {
         id: commit.id,
         sha: commit.sha,
@@ -63,10 +96,10 @@ const getHistory = async (req, res) => {
       history[monthKey].totalCommits++
     }
 
-    // Convertir l'objet en tableau trié
     const timeline = Object.values(history)
 
     res.json({
+      filters: { search, month, concept },
       totalMonths: timeline.length,
       totalCommits: commits.length,
       timeline

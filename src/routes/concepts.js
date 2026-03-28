@@ -5,7 +5,8 @@ const {
   getConcepts,
   getConceptById,
   deleteConcept,
-  getCommitsByConcept
+  getCommitsByConcept,
+  updateConcept
 } = require('../controllers/conceptController')
 
 const router = express.Router()
@@ -15,5 +16,6 @@ router.get('/concepts', jwtAuth, getConcepts)
 router.get('/concepts/:id', jwtAuth, getConceptById)
 router.delete('/concepts/:id', jwtAuth, deleteConcept)
 router.get('/concepts/:conceptId/commits', jwtAuth, getCommitsByConcept)
+router.put('/concepts/:id', jwtAuth, updateConcept)
 
 module.exports = router

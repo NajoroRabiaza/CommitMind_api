@@ -56,6 +56,41 @@ const getConceptById = async (req, res) => {
   }
 }
 
+const updateConcept = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { name, description } = req.body
+
+    if (!name) {
+      return res.status(400).json({ message: 'Le champ "name" est obligatoire' })
+    }
+
+    const concept = await prisma.concept.findFirst({
+      where: {
+        id: parseInt(id),
+        userId: req.user.id
+      }
+    })
+
+    if (!concept) {
+      return res.status(404).json({ message: 'Concept not found' })
+    }
+
+    const updated = await prisma.concept.update({
+      where: { id: parseInt(id) },
+      data: {
+        name,
+        description: description || null
+      }
+    })
+
+    res.json({ concept: updated })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+
 const deleteConcept = async (req, res) => {
   try {
     const { id } = req.params
@@ -129,4 +164,4 @@ const getCommitsByConcept = async (req, res) => {
     }
   }
 
-module.exports = { createConcept, getConcepts, getConceptById, deleteConcept, getCommitsByConcept }
+module.exports = { createConcept, getConcepts, getConceptById, deleteConcept, getCommitsByConcept, updateConcept }

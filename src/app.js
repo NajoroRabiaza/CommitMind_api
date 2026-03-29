@@ -6,6 +6,8 @@ const repositoriesRouter = require('./routes/repositories')
 const commitsRouter = require('./routes/commits')
 const conceptsRouter = require('./routes/concepts')
 const historyRouter = require('./routes/history')
+const statsRouter = require('./routes/stats')
+
 
 const app = express()
 
@@ -18,5 +20,7 @@ app.use(repositoriesRouter)
 app.use(commitsRouter)
 app.use(conceptsRouter)
 app.use(historyRouter)
+app.use(statsRouter)
+
 
 module.exports = app

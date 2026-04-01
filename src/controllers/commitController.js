@@ -1,5 +1,6 @@
 const prisma = require('../utils/prisma')
 const { getRepositoryCommits, getCommitDetail } = require('../services/githubService')
+const { getPagination, paginatedResponse } = require('../utils/pagination')
 
 const syncCommits = async (req, res) => {
   try {
@@ -66,6 +67,7 @@ const syncCommits = async (req, res) => {
 const getCommits = async (req, res) => {
   try {
     const { repoId } = req.params
+    const { page, limit, skip } = getPagination(req.query)
 
     const repository = await prisma.repository.findFirst({
       where: {
@@ -78,12 +80,18 @@ const getCommits = async (req, res) => {
       return res.status(404).json({ message: 'Repository not found' })
     }
 
-    const commits = await prisma.commit.findMany({
-      where: { repositoryId: repository.id },
-      orderBy: { committedAt: 'desc' }
+    const total = await prisma.commit.count({
+      where: { repositoryId: repository.id }
     })
 
-    res.json({ commits })
+    const commits = await prisma.commit.findMany({
+      where: { repositoryId: repository.id },
+      orderBy: { committedAt: 'desc' },
+      skip,
+      take: limit
+    })
+
+    res.json(paginatedResponse(commits, total, page, limit))
   } catch (error) {
     res.status(500).json({ message: error.message })
   }

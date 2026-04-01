@@ -22,4 +22,4 @@ const getPagination = (query) => {
     }
   }
   
-module.exports = { getPagination, paginatedResponse }
+  module.exports = { getPagination, paginatedResponse }

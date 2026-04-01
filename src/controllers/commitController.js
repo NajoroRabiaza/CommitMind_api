@@ -68,6 +68,7 @@ const getCommits = async (req, res) => {
   try {
     const { repoId } = req.params
     const { page, limit, skip } = getPagination(req.query)
+    const search = req.query.search || ''
 
     const repository = await prisma.repository.findFirst({
       where: {
@@ -80,12 +81,19 @@ const getCommits = async (req, res) => {
       return res.status(404).json({ message: 'Repository not found' })
     }
 
-    const total = await prisma.commit.count({
-      where: { repositoryId: repository.id }
-    })
+    const where = {
+      repositoryId: repository.id,
+      ...(search && {
+        message: {
+          contains: search
+        }
+      })
+    }
+
+    const total = await prisma.commit.count({ where })
 
     const commits = await prisma.commit.findMany({
-      where: { repositoryId: repository.id },
+      where,
       orderBy: { committedAt: 'desc' },
       skip,
       take: limit

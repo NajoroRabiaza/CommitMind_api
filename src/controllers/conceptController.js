@@ -24,12 +24,29 @@ const createConcept = async (req, res) => {
 
 const getConcepts = async (req, res) => {
   try {
+    const { getPagination, paginatedResponse } = require('../utils/pagination')
+    const { page, limit, skip } = getPagination(req.query)
+    const search = req.query.search || ''
+
+    const where = {
+      userId: req.user.id,
+      ...(search && {
+        name: {
+          contains: search
+        }
+      })
+    }
+
+    const total = await prisma.concept.count({ where })
+
     const concepts = await prisma.concept.findMany({
-      where: { userId: req.user.id },
-      orderBy: { createdAt: 'desc' }
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit
     })
 
-    res.json({ concepts })
+    res.json(paginatedResponse(concepts, total, page, limit))
   } catch (error) {
     res.status(500).json({ message: error.message })
   }

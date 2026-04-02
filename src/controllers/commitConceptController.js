@@ -5,10 +5,6 @@ const linkConceptToCommit = async (req, res) => {
     const { repoId, commitId } = req.params
     const { conceptId } = req.body
 
-    if (!conceptId) {
-      return res.status(400).json({ message: 'Le champ "conceptId" est obligatoire' })
-    }
-
     // Vérifier que le repo appartient à l'utilisateur connecté
     const repository = await prisma.repository.findFirst({
       where: {

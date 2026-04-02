@@ -21,7 +21,8 @@
     "node-cron": "^4.2.1",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
-    "prisma": "^4.16.2"
+    "prisma": "^4.16.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

@@ -4,10 +4,6 @@ const createConcept = async (req, res) => {
   try {
     const { name, description } = req.body
 
-    if (!name) {
-      return res.status(400).json({ message: 'Le champ "name" est obligatoire' })
-    }
-
     const concept = await prisma.concept.create({
       data: {
         name,
@@ -77,10 +73,6 @@ const updateConcept = async (req, res) => {
   try {
     const { id } = req.params
     const { name, description } = req.body
-
-    if (!name) {
-      return res.status(400).json({ message: 'Le champ "name" est obligatoire' })
-    }
 
     const concept = await prisma.concept.findFirst({
       where: {

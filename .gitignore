@@ -5,3 +5,4 @@ dist/
 prisma/dev.db
 prisma/dev.db-journal
 Archive.zip
+documentation.md

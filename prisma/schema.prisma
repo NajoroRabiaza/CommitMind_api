@@ -200,6 +200,7 @@ model Concept {
 
   // liste des commits lies a ce concept (via table intermediaire)
   commits CommitConcept[]
+  @@unique([name, userId])
 }
 
 // ============================================================

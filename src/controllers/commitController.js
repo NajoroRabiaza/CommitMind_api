@@ -106,64 +106,105 @@ const getCommits = async (req, res) => {
 }
 
 const syncCommitFiles = async (req, res) => {
-    try {
-      const { repoId, commitId } = req.params
-  
-      const repository = await prisma.repository.findFirst({
+  try {
+    const { repoId, commitId } = req.params
+    const { detectConceptsFromCommit } = require('../services/conceptDetectionService')
+
+    const repository = await prisma.repository.findFirst({
+      where: {
+        id: parseInt(repoId),
+        userId: req.user.id
+      }
+    })
+
+    if (!repository) {
+      return res.status(404).json({ message: 'Repository not found' })
+    }
+
+    const commit = await prisma.commit.findFirst({
+      where: {
+        id: parseInt(commitId),
+        repositoryId: repository.id
+      }
+    })
+
+    if (!commit) {
+      return res.status(404).json({ message: 'Commit not found' })
+    }
+
+    const [owner, repo] = repository.fullName.split('/')
+
+    const files = await getCommitDetail(
+      req.user.accessToken,
+      owner,
+      repo,
+      commit.sha
+    )
+
+    const savedFiles = []
+
+    for (const file of files) {
+      const saved = await prisma.commitFile.create({
+        data: {
+          filename: file.filename,
+          status: file.status,
+          additions: file.additions,
+          deletions: file.deletions,
+          patch: file.patch,
+          commitId: commit.id
+        }
+      })
+      savedFiles.push(saved)
+    }
+
+    // Détection automatique des concepts
+    const detectedConceptNames = detectConceptsFromCommit(commit.message, files)
+    const linkedConcepts = []
+
+    for (const conceptName of detectedConceptNames) {
+      // Créer le concept s'il n'existe pas encore
+      const concept = await prisma.concept.upsert({
         where: {
-          id: parseInt(repoId),
+          // On utilise name + userId comme identifiant unique
+          name_userId: {
+            name: conceptName,
+            userId: req.user.id
+          }
+        },
+        update: {},
+        create: {
+          name: conceptName,
           userId: req.user.id
         }
       })
-  
-      if (!repository) {
-        return res.status(404).json({ message: 'Repository not found' })
-      }
-  
-      const commit = await prisma.commit.findFirst({
+
+      // Lier le concept au commit
+      await prisma.commitConcept.upsert({
         where: {
-          id: parseInt(commitId),
-          repositoryId: repository.id
+          commitId_conceptId: {
+            commitId: commit.id,
+            conceptId: concept.id
+          }
+        },
+        update: {},
+        create: {
+          commitId: commit.id,
+          conceptId: concept.id
         }
       })
-  
-      if (!commit) {
-        return res.status(404).json({ message: 'Commit not found' })
-      }
-  
-      const [owner, repo] = repository.fullName.split('/')
-  
-      const files = await getCommitDetail(
-        req.user.accessToken,
-        owner,
-        repo,
-        commit.sha
-      )
-  
-      const savedFiles = []
-  
-      for (const file of files) {
-        const saved = await prisma.commitFile.create({
-          data: {
-            filename: file.filename,
-            status: file.status,
-            additions: file.additions,
-            deletions: file.deletions,
-            patch: file.patch,
-            commitId: commit.id
-          }
-        })
-        savedFiles.push(saved)
-      }
-  
-      res.json({
-        message: `${savedFiles.length} files synced`,
-        files: savedFiles
-      })
-    } catch (error) {
-      res.status(500).json({ message: error.message })
+
+      linkedConcepts.push(conceptName)
     }
+
+    res.json({
+      message: `${savedFiles.length} files synced`,
+      files: savedFiles,
+      detectedConcepts: linkedConcepts
+    })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
   }
+}
   
   const getCommitFiles = async (req, res) => {
     try {

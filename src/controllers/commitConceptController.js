@@ -1,21 +1,18 @@
-// ============================================================
-// fichier : src/controllers/commitConceptController.js
-// role    : gerer la liaison entre un commit et un concept
-//           c'est la fonctionnalite centrale de commitmind :
-//           on peut "taguer" un commit avec un concept
-//           pour dire "dans ce commit j'ai applique ce concept"
+// gerer la liaison entre un commit et un concept
+// c'est la fonctionnalite centrale de commitmind :
+// on peut "taguer" un commit avec un concept
+//  pour dire "dans ce commit j'ai applique ce concept"
 //
-// ce fichier gere deux types de liaisons :
-//   1. liaison manuelle  → l'utilisateur choisit lui-meme le concept
-//   2. liaison auto      → le systeme detecte les concepts automatiquement
-//                          en analysant le message du commit et les fichiers
+// ici on gere deux types de liaisons :
+//   1. liaison manuelle  = l'utilisateur choisit lui-meme le concept
+//   2. liaison auto = le systeme detecte les concepts automatiquement
+//    en analysant le message du commit et les fichiers
 //
 // pourquoi un controller separe ?
-//   la liaison commit/concept est une responsabilite distincte
-//   des commits et des concepts eux-memes
-//   la separer dans son propre fichier rend le code plus lisible
-//   et plus facile a maintenir si on veut ajouter des fonctionnalites
-// ============================================================
+//  la liaison commit/concept est une responsabilite distincte
+//  des commits et des concepts eux-memes
+//  la separer dans son propre fichier rend le code plus lisible
+//  et plus facile a maintenir si on veut ajouter des fonctionnalites
 
 // client prisma pour acceder a la base de donnees
 const prisma = require('../utils/prisma')
@@ -24,18 +21,16 @@ const prisma = require('../utils/prisma')
 // il contient le dictionnaire de mots-cles et la logique d'analyse
 const { detectConceptsFromCommit } = require('../services/conceptDetectionService')
 
-// ============================================================
 // fonction : linkConceptToCommit
-// route    : POST /repositories/:repoId/commits/:commitId/concepts
-// role     : creer un lien MANUEL entre un commit et un concept existant
-//            l'utilisateur choisit lui-meme quel concept lier
-//            avant de creer le lien, on verifie que :
-//            1. le depot appartient bien a l'utilisateur connecte
-//            2. le commit appartient bien a ce depot
-//            3. le concept appartient bien a l'utilisateur connecte
-//            ces 3 verifications evitent qu'un utilisateur puisse
-//            lier des donnees qui ne lui appartiennent pas
-// ============================================================
+// route : POST /repositories/:repoId/commits/:commitId/concepts
+//  creer un lien MANUEL entre un commit et un concept existant
+//   l'utilisateur choisit lui-meme quel concept lier
+//   avant de creer le lien, on verifie que :
+//   1. le depot appartient bien a l'utilisateur connecte
+//   2. le commit appartient bien a ce depot
+//   3. le concept appartient bien a l'utilisateur connecte
+//   ces 3 verifications evitent qu'un utilisateur puisse
+//   lier des donnees qui ne lui appartiennent pas
 const linkConceptToCommit = async (req, res) => {
   try {
     // req.params contient les segments dynamiques de l'url
@@ -48,10 +43,10 @@ const linkConceptToCommit = async (req, res) => {
     // est present et que c'est un nombre entier positif
     const { conceptId } = req.body
 
-    // --- verification 1 : le depot appartient-il a l'utilisateur ? ---
+    // verification 1 : le depot appartient-il a l'utilisateur ?
     // on cherche un depot qui correspond aux deux criteres en meme temps :
-    //   - son id numerique correspond a repoId
-    //   - il appartient a l'utilisateur connecte (userId)
+    //  - son id numerique correspond a repoId
+    //  - il appartient a l'utilisateur connecte (userId)
     // si on ne verifie pas userId, n'importe qui pourrait
     // acceder aux depots des autres utilisateurs
     // parseInt() convertit le string "42" en nombre 42
@@ -70,7 +65,7 @@ const linkConceptToCommit = async (req, res) => {
       return res.status(404).json({ message: 'repository not found' })
     }
 
-    // --- verification 2 : le commit appartient-il a ce depot ? ---
+    // verification 2 : le commit appartient-il a ce depot ?
     // on cherche un commit avec l'id ET qui appartient a ce depot
     // ca evite qu'on passe un commitId d'un autre depot
     const commit = await prisma.commit.findFirst({
@@ -84,7 +79,7 @@ const linkConceptToCommit = async (req, res) => {
       return res.status(404).json({ message: 'commit not found' })
     }
 
-    // --- verification 3 : le concept appartient-il a l'utilisateur ? ---
+    // verification 3 : le concept appartient-il a l'utilisateur ?
     // un utilisateur ne peut lier que ses propres concepts
     // il ne peut pas utiliser les concepts d'un autre utilisateur
     // conceptId vient du body et a deja ete valide par zod
@@ -100,10 +95,10 @@ const linkConceptToCommit = async (req, res) => {
       return res.status(404).json({ message: 'concept not found' })
     }
 
-    // --- creation du lien ---
+    // creation du lien
     // on utilise upsert plutot que create pour eviter les doublons :
-    //   si le lien existe deja → on ne fait rien (update: {} vide)
-    //   si le lien n'existe pas → on le cree
+    //  si le lien existe deja = on ne fait rien (update: {} vide)
+    //  si le lien n'existe pas = on le cree
     // la contrainte @@unique([commitId, conceptId]) dans schema.prisma
     // garantit qu'on ne peut pas avoir deux fois le meme lien
     // prisma utilise cette contrainte comme critere de recherche
@@ -139,28 +134,26 @@ const linkConceptToCommit = async (req, res) => {
   }
 }
 
-// ============================================================
 // fonction : autoDetectConcepts
-// route    : POST /repositories/:repoId/commits/:commitId/concepts/auto
-// role     : detecter AUTOMATIQUEMENT les concepts d'un commit
-//            en analysant trois sources de donnees :
-//              1. le message du commit
-//              2. les noms des fichiers modifies
-//              3. le contenu du code modifie (patch)
+// route : POST /repositories/:repoId/commits/:commitId/concepts/auto
+// role : detecter AUTOMATIQUEMENT les concepts d'un commit
+//  en analysant trois sources de donnees :
+//  1. le message du commit
+//  2. les noms des fichiers modifies
+//  3. le contenu du code modifie (patch)
 //
 // difference avec linkConceptToCommit :
-//   linkConceptToCommit → l'utilisateur choisit le concept
-//   autoDetectConcepts  → le systeme detecte les concepts tout seul
+//   linkConceptToCommit = l'utilisateur choisit le concept
+//   autoDetectConcepts  = le systeme detecte les concepts tout seul
 //
 // le systeme utilise un dictionnaire de regles dans
 // conceptDetectionService.js pour faire correspondre
 // des mots-cles a des concepts techniques
-// ============================================================
 const autoDetectConcepts = async (req, res) => {
   try {
     const { repoId, commitId } = req.params
 
-    // --- verification 1 : le depot appartient a l'utilisateur ? ---
+    // verification 1 : le depot appartient a l'utilisateur ?
     const repository = await prisma.repository.findFirst({
       where: {
         id: parseInt(repoId),
@@ -172,7 +165,7 @@ const autoDetectConcepts = async (req, res) => {
       return res.status(404).json({ message: 'repository not found' })
     }
 
-    // --- verification 2 : le commit appartient a ce depot ? ---
+    // verification 2 : le commit appartient a ce depot ?
     const commit = await prisma.commit.findFirst({
       where: {
         id: parseInt(commitId),
@@ -191,7 +184,7 @@ const autoDetectConcepts = async (req, res) => {
       where: { commitId: commit.id }
     })
 
-    // --- detection automatique ---
+    // detection automatique
     // on passe le message du commit et ses fichiers au service
     // le service parcourt le dictionnaire de regles et retourne
     // les noms des concepts detectes (ex: ["JWT Authentication", "Prisma ORM"])
@@ -202,8 +195,8 @@ const autoDetectConcepts = async (req, res) => {
     for (const conceptName of detectedConceptNames) {
       // etape 1 : creer le concept s'il n'existe pas encore
       // on utilise upsert avec la contrainte unique (name + userId) :
-      //   si le concept existe deja pour cet utilisateur → on ne change rien
-      //   sinon → on le cree automatiquement
+      //  si le concept existe deja pour cet utilisateur = on ne change rien
+      //  sinon = on le cree automatiquement
       // ca evite de demander a l'utilisateur de creer le concept manuellement
       const concept = await prisma.concept.upsert({
         where: {
@@ -226,8 +219,8 @@ const autoDetectConcepts = async (req, res) => {
 
       // etape 2 : lier le concept au commit
       // meme logique upsert pour eviter les doublons
-      // si le lien existe deja → on ne fait rien
-      // si le lien n'existe pas → on le cree
+      // si le lien existe deja = on ne fait rien
+      // si le lien n'existe pas = on le cree
       await prisma.commitConcept.upsert({
         where: {
           commitId_conceptId: {
@@ -246,9 +239,9 @@ const autoDetectConcepts = async (req, res) => {
     }
 
     // on renvoie le resultat avec :
-    //   - le nombre de concepts detectes
-    //   - la liste des concepts detectes et lies
-    //   - un message si aucun concept n'a ete detecte
+    //  - le nombre de concepts detectes
+    //  - la liste des concepts detectes et lies
+    //  - un message si aucun concept n'a ete detecte
     res.json({
       message: linkedConcepts.length > 0
         ? `${linkedConcepts.length} concepts detected and linked automatically`

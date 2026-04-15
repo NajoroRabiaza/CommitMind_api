@@ -253,5 +253,95 @@ const autoDetectConcepts = async (req, res) => {
   }
 }
 
+// fonction : unlinkConceptFromCommit
+// DELETE /repositories/:repoId/commits/:commitId/concepts/:conceptId
+//  supprimer le lien entre un commit et un concept
+//   on verifie la chaine de propriete avant de supprimer :
+//   1. le depot appartient a l'utilisateur connecte
+//   2. le commit appartient a ce depot
+//   3. le concept appartient a l'utilisateur connecte
+//   4. le lien existe bien entre ce commit et ce concept
+const unlinkConceptFromCommit = async (req, res) => {
+  try {
+    // les trois ids viennent tous de l'url
+    // ex: DELETE /repositories/1/commits/3/concepts/2
+    const { repoId, commitId, conceptId } = req.params
+
+    // verification 1 : le depot appartient a l'utilisateur ?
+    const repository = await prisma.repository.findFirst({
+      where: {
+        id: parseInt(repoId),
+        userId: req.user.id
+      }
+    })
+
+    if (!repository) {
+      return res.status(404).json({ message: 'repository not found' })
+    }
+
+    // verification 2 : le commit appartient a ce depot ?
+    const commit = await prisma.commit.findFirst({
+      where: {
+        id: parseInt(commitId),
+        repositoryId: repository.id
+      }
+    })
+
+    if (!commit) {
+      return res.status(404).json({ message: 'commit not found' })
+    }
+
+    // verification 3 : le concept appartient a l'utilisateur ?
+    const concept = await prisma.concept.findFirst({
+      where: {
+        id: parseInt(conceptId),
+        userId: req.user.id
+      }
+    })
+
+    if (!concept) {
+      return res.status(404).json({ message: 'concept not found' })
+    }
+
+    // verification 4 : le lien existe-t-il ?
+    // avant de supprimer on verifie que le lien existe vraiment
+    // sinon on retourne 404 plutot que de faire une operation inutile
+    const link = await prisma.commitConcept.findUnique({
+      where: {
+        commitId_conceptId: {
+          commitId: commit.id,
+          conceptId: concept.id
+        }
+      }
+    })
+
+    if (!link) {
+      return res.status(404).json({
+        message: `no link found between commit "${commit.message}" and concept "${concept.name}"`
+      })
+    }
+
+    // suppression du lien
+    // on supprime uniquement le lien dans CommitConcept
+    // le commit et le concept restent intacts en base de donnees
+    // on ne supprime que la relation entre les deux
+    await prisma.commitConcept.delete({
+      where: {
+        commitId_conceptId: {
+          commitId: commit.id,
+          conceptId: concept.id
+        }
+      }
+    })
+
+    res.json({
+      message: `concept "${concept.name}" unlinked from commit "${commit.message}"`
+    })
+
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
 // on exporte les deux fonctions pour que le fichier de routes puisse les utiliser
-module.exports = { linkConceptToCommit, autoDetectConcepts }
+module.exports = { linkConceptToCommit, autoDetectConcepts, unlinkConceptFromCommit }

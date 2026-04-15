@@ -40,7 +40,7 @@ const {
 
 // linkConceptToCommit vient d'un controller separé
 // car la liaison commit/concept est une responsabilite distincte
-const { linkConceptToCommit, autoDetectConcepts } = require('../controllers/commitConceptController')
+const { linkConceptToCommit, autoDetectConcepts, unlinkConceptFromCommit } = require('../controllers/commitConceptController')
 
 const router = express.Router()
 
@@ -79,6 +79,8 @@ router.get('/repositories/:repoId/commits/:commitId/files', jwtAuth, getCommitFi
 router.post('/repositories/:repoId/commits/:commitId/concepts', jwtAuth, validate(linkConceptSchema), linkConceptToCommit)
 
 router.post('/repositories/:repoId/commits/:commitId/concepts/auto', jwtAuth, autoDetectConcepts)
+
+router.delete('/repositories/:repoId/commits/:commitId/concepts/:conceptId', jwtAuth, unlinkConceptFromCommit)
 
 // on exporte le routeur pour que app.js puisse le brancher
 module.exports = router

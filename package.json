@@ -42,6 +42,6 @@
     ],
     "coverageDirectory": "coverage",
     "coverageReporters": ["text", "lcov"],
-    "setupFilesAfterFramework": ["./tests/setup.js"]
+    "setupFilesAfterEnv": ["./tests/setup.js"]
   }
 }

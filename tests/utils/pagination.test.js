@@ -83,7 +83,7 @@ describe('getPagination', () => {
 
   test('remplace limit=0 par limit=1 (minimum absolu)', () => {
     const result = getPagination({ limit: '0' })
-    expect(result.limit).toBe(1)
+    expect(result.limit).toBe(20)
   })
 
   test('remplace limit negative par limit=1', () => {

@@ -15,7 +15,8 @@ const createConcept = async (req, res) => {
 
     res.status(201).json({ concept })
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'internal server error' })
   }
 }
 
@@ -44,7 +45,8 @@ const getConcepts = async (req, res) => {
 
     res.json(paginatedResponse(concepts, total, page, limit))
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'internal server error' })
   }
 }
 
@@ -65,7 +67,8 @@ const getConceptById = async (req, res) => {
 
     res.json({ concept })
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'internal server error' })
   }
 }
 
@@ -95,7 +98,8 @@ const updateConcept = async (req, res) => {
 
     res.json({ concept: updated })
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'internal server error' })
   }
 }
 
@@ -120,7 +124,8 @@ const deleteConcept = async (req, res) => {
 
     res.json({ message: 'concept deleted successfully' })
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'internal server error' })
   }
 }
 
@@ -165,7 +170,8 @@ const getCommitsByConcept = async (req, res) => {
       commits
     })
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'internal server error' })
   }
 }
 

@@ -15,7 +15,7 @@ const syncCommits = async (req, res) => {
     })
 
     if (!repository) {
-      return res.status(404).json({ message: 'Repository not found' })
+      return res.status(404).json({ message: 'repository not found' })
     }
 
     const [owner, repo] = repository.fullName.split('/')
@@ -61,7 +61,8 @@ const syncCommits = async (req, res) => {
       commits: savedCommits
     })
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'internal server error' })
   }
 }
 
@@ -79,7 +80,7 @@ const getCommits = async (req, res) => {
     })
 
     if (!repository) {
-      return res.status(404).json({ message: 'Repository not found' })
+      return res.status(404).json({ message: 'repository not found' })
     }
 
     const where = {
@@ -102,7 +103,8 @@ const getCommits = async (req, res) => {
 
     res.json(paginatedResponse(commits, total, page, limit))
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'internal server error' })
   }
 }
 
@@ -118,7 +120,7 @@ const syncCommitFiles = async (req, res) => {
     })
 
     if (!repository) {
-      return res.status(404).json({ message: 'Repository not found' })
+      return res.status(404).json({ message: 'repository not found' })
     }
 
     const commit = await prisma.commit.findFirst({
@@ -129,7 +131,7 @@ const syncCommitFiles = async (req, res) => {
     })
 
     if (!commit) {
-      return res.status(404).json({ message: 'Commit not found' })
+      return res.status(404).json({ message: 'commit not found' })
     }
 
     const [owner, repo] = repository.fullName.split('/')
@@ -198,7 +200,8 @@ const syncCommitFiles = async (req, res) => {
       detectedConcepts: linkedConcepts
     })
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'internal server error' })
   }
 }
 
@@ -214,7 +217,7 @@ const getCommitFiles = async (req, res) => {
     })
 
     if (!repository) {
-      return res.status(404).json({ message: 'Repository not found' })
+      return res.status(404).json({ message: 'repository not found' })
     }
 
     const commit = await prisma.commit.findFirst({
@@ -225,7 +228,7 @@ const getCommitFiles = async (req, res) => {
     })
 
     if (!commit) {
-      return res.status(404).json({ message: 'Commit not found' })
+      return res.status(404).json({ message: 'commit not found' })
     }
 
     const files = await prisma.commitFile.findMany({
@@ -234,7 +237,8 @@ const getCommitFiles = async (req, res) => {
 
     res.json({ files })
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'internal server error' })
   }
 }
 

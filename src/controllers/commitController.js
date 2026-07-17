@@ -152,7 +152,10 @@ const syncCommitFiles = async (req, res) => {
           status: file.status,
           additions: file.additions,
           deletions: file.deletions,
-          patch: file.patch,
+          // Le patch peut être très volumineux pour les gros fichiers.
+          // On le tronque à 10 000 caractères pour éviter de saturer
+          // la base de données et alourdir les réponses API.
+          patch: file.patch ? file.patch.substring(0, 10000) : null,
           commitId: commit.id
         }
       })

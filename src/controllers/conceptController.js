@@ -132,6 +132,7 @@ const deleteConcept = async (req, res) => {
 const getCommitsByConcept = async (req, res) => {
   try {
     const { conceptId } = req.params
+    const { page, limit, skip } = getPagination(req.query)
 
     const concept = await prisma.concept.findFirst({
       where: {
@@ -144,10 +145,14 @@ const getCommitsByConcept = async (req, res) => {
       return res.status(404).json({ message: 'concept not found' })
     }
 
+    // On compte d'abord le total des liaisons pour construire
+    // les métadata de pagination avant de charger les données
+    const total = await prisma.commitConcept.count({
+      where: { conceptId: concept.id }
+    })
+
     const commitConcepts = await prisma.commitConcept.findMany({
-      where: {
-        conceptId: concept.id
-      },
+      where: { conceptId: concept.id },
       include: {
         commit: {
           include: {
@@ -159,15 +164,16 @@ const getCommitsByConcept = async (req, res) => {
         commit: {
           committedAt: 'desc'
         }
-      }
+      },
+      skip,
+      take: limit
     })
 
     const commits = commitConcepts.map(cc => cc.commit)
 
     res.json({
       concept: concept.name,
-      totalCommits: commits.length,
-      commits
+      ...paginatedResponse(commits, total, page, limit)
     })
   } catch (error) {
     console.error(error)

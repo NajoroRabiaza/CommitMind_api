@@ -1,8 +1,6 @@
-// Dictionnaire de concepts techniques
-// Chaque concept a une liste de mots-clés qui le déclenchent
 const CONCEPT_RULES = [
 
-  // ─── AUTHENTIFICATION & SÉCURITÉ ───────────────────────────────────────────
+  // AUTHENTIFICATION & SÉCURITÉ
 
   {
     name: 'JWT Authentication',
@@ -45,7 +43,7 @@ const CONCEPT_RULES = [
     keywords: ['2fa', 'totp', 'otp', 'two factor', 'authenticator', 'speakeasy', 'qrcode']
   },
 
-  // ─── BASES DE DONNÉES ──────────────────────────────────────────────────────
+  // BASES DE DONNÉES
 
   {
     name: 'PostgreSQL',
@@ -89,18 +87,18 @@ const CONCEPT_RULES = [
   },
   {
     name: 'Database Indexing',
-    keywords: ['index', 'create index', '@@index', '@index', 'query optimization', 'explain analyze']
+    keywords: ['create index', '@@index', '@index', 'query optimization', 'explain analyze']
   },
   {
     name: 'Database Migration',
-    keywords: ['migrate', 'migration', 'prisma migrate', 'knex migrate', 'up()', 'down()', 'alter table', 'add column', 'drop column']
+    keywords: ['prisma migrate', 'knex migrate', 'alter table', 'add column', 'drop column']
   },
 
-  // ─── FRAMEWORKS BACKEND ────────────────────────────────────────────────────
+  // FRAMEWORKS BACKEND
 
   {
     name: 'Express.js',
-    keywords: ['express', 'app.use', 'app.get', 'app.post', 'app.put', 'app.delete', 'router.get', 'router.post', 'req.body', 'res.json', 'res.status', 'next()']
+    keywords: ['express()', 'app.use', 'app.get', 'app.post', 'app.put', 'app.delete', 'router.get', 'router.post', 'req.body', 'res.json', 'res.status', 'express.json']
   },
   {
     name: 'NestJS',
@@ -147,7 +145,7 @@ const CONCEPT_RULES = [
     keywords: ['rails', 'activerecord', 'rake', 'gemfile', 'belongs_to', 'has_many', 'rails routes', 'erb']
   },
 
-  // ─── FRAMEWORKS FRONTEND ───────────────────────────────────────────────────
+  // FRAMEWORKS FRONTEND
 
   {
     name: 'React',
@@ -163,7 +161,7 @@ const CONCEPT_RULES = [
   },
   {
     name: 'Angular',
-    keywords: ['angular', '@component', '@injectable', '@ngmodule', 'ngrouter', 'angular forms', 'rxjs', 'observable', 'httpclient', 'ngif', 'ngfor']
+    keywords: ['angular', '@component', '@ngmodule', 'ngrouter', 'angular forms', 'rxjs', 'observable', 'httpclient', 'ngif', 'ngfor']
   },
   {
     name: 'Svelte',
@@ -171,10 +169,10 @@ const CONCEPT_RULES = [
   },
   {
     name: 'Tailwind CSS',
-    keywords: ['tailwind', 'tailwindcss', 'classnames', 'tw-', 'bg-', 'text-', 'flex', 'grid-cols', 'rounded-', 'shadow-']
+    keywords: ['tailwind', 'tailwindcss', 'classnames', 'tw-', 'bg-', 'text-', 'grid-cols', 'rounded-', 'shadow-']
   },
 
-  // ─── LANGAGES ──────────────────────────────────────────────────────────────
+  // LANGAGES
 
   {
     name: 'Node.js',
@@ -209,11 +207,11 @@ const CONCEPT_RULES = [
     keywords: ['csharp', '.cs', 'using system', 'namespace ', 'public class', 'async task', 'linq', '.net', 'asp.net', 'nuget']
   },
 
-  // ─── ARCHITECTURE & DESIGN PATTERNS ───────────────────────────────────────
+  // ARCHITECTURE & DESIGN PATTERNS
 
   {
     name: 'REST API',
-    keywords: ['route', 'router', 'endpoint', 'controller', 'rest api', 'http method', 'get request', 'post request', 'put request', 'delete request', 'patch request', 'status code', 'json response']
+    keywords: ['rest api', 'http method', 'get request', 'post request', 'put request', 'delete request', 'patch request', 'status code', 'json response', 'restful']
   },
   {
     name: 'GraphQL',
@@ -225,19 +223,19 @@ const CONCEPT_RULES = [
   },
   {
     name: 'MVC Pattern',
-    keywords: ['model', 'view', 'controller', 'mvc', 'model view controller']
+    keywords: ['mvc', 'model view controller']
   },
   {
     name: 'Repository Pattern',
-    keywords: ['repository', 'repo pattern', 'data access layer', 'data layer']
+    keywords: ['repository pattern', 'repo pattern', 'data access layer', 'data layer']
   },
   {
     name: 'Middleware Pattern',
-    keywords: ['middleware', 'pipeline', 'interceptor', 'before hook', 'after hook']
+    keywords: ['middleware pattern', 'pipeline', 'interceptor', 'before hook', 'after hook']
   },
   {
     name: 'Event Driven',
-    keywords: ['event emitter', 'eventemitter', 'event listener', 'on(', 'emit(', 'pub/sub', 'publish', 'subscribe', 'message queue', 'rabbitmq', 'kafka']
+    keywords: ['event emitter', 'eventemitter', 'event listener', 'pub/sub', 'publish', 'subscribe', 'message queue', 'rabbitmq', 'kafka']
   },
   {
     name: 'Dependency Injection',
@@ -245,14 +243,14 @@ const CONCEPT_RULES = [
   },
   {
     name: 'Clean Architecture',
-    keywords: ['clean architecture', 'use case', 'entity', 'repository interface', 'domain layer', 'application layer', 'infrastructure layer']
+    keywords: ['clean architecture', 'use case', 'repository interface', 'domain layer', 'application layer', 'infrastructure layer']
   },
   {
     name: 'SOLID Principles',
     keywords: ['solid', 'single responsibility', 'open closed', 'liskov', 'interface segregation', 'dependency inversion']
   },
 
-  // ─── CLOUD & DEVOPS ────────────────────────────────────────────────────────
+  // CLOUD & DEVOPS
 
   {
     name: 'Docker',
@@ -260,11 +258,11 @@ const CONCEPT_RULES = [
   },
   {
     name: 'Kubernetes',
-    keywords: ['kubernetes', 'k8s', 'kubectl', 'pod', 'deployment', 'service', 'ingress', 'namespace', 'helm', 'configmap', 'secret']
+    keywords: ['kubernetes', 'k8s', 'kubectl', 'pod', 'deployment', 'ingress', 'helm', 'configmap']
   },
   {
     name: 'CI/CD',
-    keywords: ['github actions', 'ci/cd', 'pipeline', '.github/workflows', 'workflow', 'on: push', 'jobs:', 'steps:', 'gitlab ci', 'circleci', 'travis ci']
+    keywords: ['github actions', 'ci/cd', '.github/workflows', 'workflow', 'on: push', 'jobs:', 'steps:', 'gitlab ci', 'circleci', 'travis ci']
   },
   {
     name: 'AWS',
@@ -287,7 +285,7 @@ const CONCEPT_RULES = [
     keywords: ['dotenv', '.env', 'process.env', 'environment variable', '.env.example', 'env(', 'config()']
   },
 
-  // ─── OUTILS & UTILITAIRES ──────────────────────────────────────────────────
+  // OUTILS & UTILITAIRES
 
   {
     name: 'Git',
@@ -323,19 +321,19 @@ const CONCEPT_RULES = [
   },
   {
     name: 'WebSocket',
-    keywords: ['socket', 'websocket', 'socket.io', 'realtime', 'emit(', 'on(', 'broadcast', 'room', 'ws://', 'wss://', 'socket.on', 'socket.emit']
+    keywords: ['socket', 'websocket', 'socket.io', 'realtime', 'broadcast', 'room', 'ws://', 'wss://', 'socket.on', 'socket.emit']
   },
   {
     name: 'Logging',
-    keywords: ['winston', 'morgan', 'pino', 'bunyan', 'log level', 'logger', 'console.log', 'error log', 'info log', 'debug log']
+    keywords: ['winston', 'morgan', 'pino', 'bunyan', 'log level', 'logger', 'error log', 'info log', 'debug log']
   },
   {
     name: 'Caching',
-    keywords: ['cache', 'cacheable', 'cache-control', 'etag', 'max-age', 'no-cache', 'stale', 'invalidate cache', 'memoize']
+    keywords: ['cache-control', 'etag', 'max-age', 'no-cache', 'stale', 'invalidate cache', 'memoize']
   },
   {
     name: 'Search',
-    keywords: ['search', 'elasticsearch', 'algolia', 'fulltext', 'full-text', 'contains:', 'search query', 'fuzzy search', 'indexing']
+    keywords: ['elasticsearch', 'algolia', 'fulltext', 'full-text', 'fuzzy search', 'search indexing']
   },
   {
     name: 'PDF Generation',
@@ -346,7 +344,7 @@ const CONCEPT_RULES = [
     keywords: ['chart', 'graph', 'chartjs', 'd3.js', 'recharts', 'plotly', 'canvas', 'svg', 'histogram', 'pie chart', 'bar chart']
   },
 
-  // ─── CONCEPTS AVANCÉS ──────────────────────────────────────────────────────
+  // CONCEPTS AVANCÉS
 
   {
     name: 'Async/Await',
@@ -358,11 +356,11 @@ const CONCEPT_RULES = [
   },
   {
     name: 'Data Modeling',
-    keywords: ['schema', 'model', 'entity', 'relation', 'foreign key', 'one to many', 'many to many', 'one to one', 'normalization']
+    keywords: ['schema', 'entity', 'relation', 'one to many', 'many to many', 'one to one', 'normalization']
   },
   {
     name: 'API Documentation',
-    keywords: ['swagger', 'openapi', 'apidoc', 'postman collection', 'readme', 'api docs', 'endpoint documentation']
+    keywords: ['swagger', 'openapi', 'apidoc', 'postman collection', 'api docs', 'endpoint documentation']
   },
   {
     name: 'Encryption',
@@ -386,10 +384,6 @@ const CONCEPT_RULES = [
   }
 ]
 
-/**
- * Détecte les concepts dans un texte donné
- * Retourne la liste des noms de concepts détectés
- */
 const detectConcepts = (text) => {
   if (!text) return []
 
@@ -409,22 +403,20 @@ const detectConcepts = (text) => {
 }
 
 /**
- * Analyse un commit complet (message + fichiers)
- * et retourne tous les concepts détectés
+ * Analyse un commit complet (message + fichiers) et retourne tous les concepts
+ * détectés. Utilise un Set pour éviter les doublons si un concept est détecté
+ * à la fois dans le message et dans un fichier.
  */
 const detectConceptsFromCommit = (commitMessage, files = []) => {
   const detected = new Set()
 
-  // Analyse du message du commit
   const fromMessage = detectConcepts(commitMessage)
   fromMessage.forEach(c => detected.add(c))
 
-  // Analyse des noms de fichiers
   for (const file of files) {
     const fromFilename = detectConcepts(file.filename)
     fromFilename.forEach(c => detected.add(c))
 
-    // Analyse du patch (code modifié)
     if (file.patch) {
       const fromPatch = detectConcepts(file.patch)
       fromPatch.forEach(c => detected.add(c))

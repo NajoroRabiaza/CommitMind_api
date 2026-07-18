@@ -1,3 +1,14 @@
+/**
+ * Controller de liaison entre commits et concepts.
+ *
+ * Gère trois opérations : liaison manuelle d'un concept à un commit,
+ * détection automatique des concepts d'un commit via le service dédié,
+ * et suppression d'un lien existant.
+ *
+ * Chaque opération vérifie la chaîne de propriété complète :
+ * dépôt => commit => concept, tous rattachés à l'utilisateur connecté.
+ */
+
 const prisma = require('../utils/prisma')
 const { detectConceptsFromCommit } = require('../services/conceptDetectionService')
 
@@ -7,10 +18,7 @@ const linkConceptToCommit = async (req, res) => {
     const { conceptId } = req.body
 
     const repository = await prisma.repository.findFirst({
-      where: {
-        id: parseInt(repoId),
-        userId: req.user.id
-      }
+      where: { id: parseInt(repoId), userId: req.user.id }
     })
 
     if (!repository) {
@@ -18,10 +26,7 @@ const linkConceptToCommit = async (req, res) => {
     }
 
     const commit = await prisma.commit.findFirst({
-      where: {
-        id: parseInt(commitId),
-        repositoryId: repository.id
-      }
+      where: { id: parseInt(commitId), repositoryId: repository.id }
     })
 
     if (!commit) {
@@ -29,16 +34,15 @@ const linkConceptToCommit = async (req, res) => {
     }
 
     const concept = await prisma.concept.findFirst({
-      where: {
-        id: parseInt(conceptId),
-        userId: req.user.id
-      }
+      where: { id: parseInt(conceptId), userId: req.user.id }
     })
 
     if (!concept) {
       return res.status(404).json({ message: 'concept not found' })
     }
 
+    // upsert pour éviter les doublons si le lien existe déjà,
+    // sans renvoyer d'erreur au client
     const link = await prisma.commitConcept.upsert({
       where: {
         commitId_conceptId: {
@@ -68,10 +72,7 @@ const autoDetectConcepts = async (req, res) => {
     const { repoId, commitId } = req.params
 
     const repository = await prisma.repository.findFirst({
-      where: {
-        id: parseInt(repoId),
-        userId: req.user.id
-      }
+      where: { id: parseInt(repoId), userId: req.user.id }
     })
 
     if (!repository) {
@@ -79,10 +80,7 @@ const autoDetectConcepts = async (req, res) => {
     }
 
     const commit = await prisma.commit.findFirst({
-      where: {
-        id: parseInt(commitId),
-        repositoryId: repository.id
-      }
+      where: { id: parseInt(commitId), repositoryId: repository.id }
     })
 
     if (!commit) {
@@ -99,30 +97,18 @@ const autoDetectConcepts = async (req, res) => {
     for (const conceptName of detectedConceptNames) {
       const concept = await prisma.concept.upsert({
         where: {
-          name_userId: {
-            name: conceptName,
-            userId: req.user.id
-          }
+          name_userId: { name: conceptName, userId: req.user.id }
         },
         update: {},
-        create: {
-          name: conceptName,
-          userId: req.user.id
-        }
+        create: { name: conceptName, userId: req.user.id }
       })
 
       await prisma.commitConcept.upsert({
         where: {
-          commitId_conceptId: {
-            commitId: commit.id,
-            conceptId: concept.id
-          }
+          commitId_conceptId: { commitId: commit.id, conceptId: concept.id }
         },
         update: {},
-        create: {
-          commitId: commit.id,
-          conceptId: concept.id
-        }
+        create: { commitId: commit.id, conceptId: concept.id }
       })
 
       linkedConcepts.push(conceptName)
@@ -145,10 +131,7 @@ const unlinkConceptFromCommit = async (req, res) => {
     const { repoId, commitId, conceptId } = req.params
 
     const repository = await prisma.repository.findFirst({
-      where: {
-        id: parseInt(repoId),
-        userId: req.user.id
-      }
+      where: { id: parseInt(repoId), userId: req.user.id }
     })
 
     if (!repository) {
@@ -156,10 +139,7 @@ const unlinkConceptFromCommit = async (req, res) => {
     }
 
     const commit = await prisma.commit.findFirst({
-      where: {
-        id: parseInt(commitId),
-        repositoryId: repository.id
-      }
+      where: { id: parseInt(commitId), repositoryId: repository.id }
     })
 
     if (!commit) {
@@ -167,10 +147,7 @@ const unlinkConceptFromCommit = async (req, res) => {
     }
 
     const concept = await prisma.concept.findFirst({
-      where: {
-        id: parseInt(conceptId),
-        userId: req.user.id
-      }
+      where: { id: parseInt(conceptId), userId: req.user.id }
     })
 
     if (!concept) {
@@ -179,10 +156,7 @@ const unlinkConceptFromCommit = async (req, res) => {
 
     const link = await prisma.commitConcept.findUnique({
       where: {
-        commitId_conceptId: {
-          commitId: commit.id,
-          conceptId: concept.id
-        }
+        commitId_conceptId: { commitId: commit.id, conceptId: concept.id }
       }
     })
 
@@ -194,10 +168,7 @@ const unlinkConceptFromCommit = async (req, res) => {
 
     await prisma.commitConcept.delete({
       where: {
-        commitId_conceptId: {
-          commitId: commit.id,
-          conceptId: concept.id
-        }
+        commitId_conceptId: { commitId: commit.id, conceptId: concept.id }
       }
     })
 

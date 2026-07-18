@@ -1,11 +1,17 @@
+/**
+ * Controller des statistiques globales.
+ *
+ * Assemble en une seule réponse les compteurs globaux, l'évolution
+ * des commits par mois, le top 5 des concepts et le top 5 des dépôts
+ * les plus actifs de l'user connecté.
+ */
+
 const prisma = require('../utils/prisma')
 
 const getStats = async (req, res) => {
   try {
     const totalCommits = await prisma.commit.count({
-      where: {
-        repository: { userId: req.user.id }
-      }
+      where: { repository: { userId: req.user.id } }
     })
 
     const totalRepositories = await prisma.repository.count({
@@ -16,13 +22,11 @@ const getStats = async (req, res) => {
       where: { userId: req.user.id }
     })
 
+    // On ne sélectionne que committedAt pour éviter de charger
+    // toutes les colonnes de chaque commit uniquement pour le groupement
     const commits = await prisma.commit.findMany({
-      where: {
-        repository: { userId: req.user.id }
-      },
-      select: {
-        committedAt: true
-      }
+      where: { repository: { userId: req.user.id } },
+      select: { committedAt: true }
     })
 
     const commitsByMonth = {}
@@ -35,40 +39,20 @@ const getStats = async (req, res) => {
 
     const topConcepts = await prisma.concept.findMany({
       where: { userId: req.user.id },
-      include: {
-        _count: {
-          select: { commits: true }
-        }
-      },
-      orderBy: {
-        commits: {
-          _count: 'desc'
-        }
-      },
+      include: { _count: { select: { commits: true } } },
+      orderBy: { commits: { _count: 'desc' } },
       take: 5
     })
 
     const topRepositories = await prisma.repository.findMany({
       where: { userId: req.user.id },
-      include: {
-        _count: {
-          select: { commits: true }
-        }
-      },
-      orderBy: {
-        commits: {
-          _count: 'desc'
-        }
-      },
+      include: { _count: { select: { commits: true } } },
+      orderBy: { commits: { _count: 'desc' } },
       take: 5
     })
 
     res.json({
-      overview: {
-        totalCommits,
-        totalRepositories,
-        totalConcepts
-      },
+      overview: { totalCommits, totalRepositories, totalConcepts },
       commitsByMonth: Object.entries(commitsByMonth)
         .map(([month, count]) => ({ month, count }))
         .sort((a, b) => a.month.localeCompare(b.month)),

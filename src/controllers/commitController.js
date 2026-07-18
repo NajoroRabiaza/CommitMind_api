@@ -1,3 +1,14 @@
+/**
+ * Controller des commits et des fichiers modifiés.
+ *
+ * Gère la synchronisation des commits depuis GitHub, leur lecture paginée,
+ * la synchronisation des fichiers d'un commit et la détection automatique
+ * des concepts associés.
+ *
+ * Toutes les opérations vérifient que le dépôt et le commit appartiennent
+ * bien à l'utilisateur connecté avant d'agir.
+ */
+
 const prisma = require('../utils/prisma')
 const { getRepositoryCommits, getCommitDetail } = require('../services/githubService')
 const { getPagination, paginatedResponse } = require('../utils/pagination')

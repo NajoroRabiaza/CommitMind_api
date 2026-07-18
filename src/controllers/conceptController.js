@@ -1,3 +1,14 @@
+/**
+ * Controller des concepts (tags d'apprentissage).
+ *
+ * Gère le CRUD complet des concepts et la récupération paginée
+ * des commits liés à un concept donné.
+ *
+ * Un concept appartient toujours à un utilisateur précis. Toutes
+ * les opérations filtrent sur userId pour garantir l'isolation
+ * des données entre utilisateurs.
+ */
+
 const prisma = require('../utils/prisma')
 const { getPagination, paginatedResponse } = require('../utils/pagination')
 
@@ -146,7 +157,7 @@ const getCommitsByConcept = async (req, res) => {
     }
 
     // On compte d'abord le total des liaisons pour construire
-    // les métadata de pagination avant de charger les données
+    // les métadata de pagination avant de charger les data
     const total = await prisma.commitConcept.count({
       where: { conceptId: concept.id }
     })

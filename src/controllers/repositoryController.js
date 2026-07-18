@@ -1,3 +1,13 @@
+/**
+ * Controller des dépôts GitHub.
+ *
+ * Gère la synchronisation des dépôts depuis l'API GitHub vers la base
+ * de données locale, et leur lecture paginée.
+ *
+ * La synchronisation utilise upsert pour gérer proprement les deux cas :
+ * premier import d'un dépôt et mise à jour d'un dépôt déjà connu.
+ */
+
 const prisma = require('../utils/prisma')
 const { getUserRepositories } = require('../services/githubService')
 const { getPagination, paginatedResponse } = require('../utils/pagination')

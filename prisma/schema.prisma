@@ -1,233 +1,99 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// configuration du generateur
-// "generator client" dit a prisma de generer le code js
-// qu'on utilisera dans notre application pour faire des requetes
-// c'est ce qui cree le dossier node_modules/@prisma/client
 generator client {
   provider = "prisma-client-js"
 }
 
-// --- configuration de la base de donnees ---
-// "datasource db" indique quel type de base on utilise
-// et ou elle se trouve (via la variable DATABASE_URL dans .env)
-// on utilise postgresql en production
-// mais sqlite est configure dans .env pour le developpement local
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// ============================================================
-// modele : user
-// represente un utilisateur connecte via github
-// chaque utilisateur peut avoir plusieurs depots et concepts
-// ============================================================
 model User {
-  // identifiant unique auto-incrementé dans notre base de données
   id          Int      @id @default(autoincrement())
-
-  // identifiant unique cote github (different du notre)
-  // on le stocke pour reconnaitre un utilisateur qui revient
   githubId    String   @unique
-
-  // nom d'utilisateur github affiché publiquement
   username    String
-
-  // l'email peut etre null car certains comptes github
-  // n'ont pas d'email public
   email       String?
-
-  // url de la photo de profil github
   avatarUrl   String?
-
-  // le token oauth qu'on recupere apres connexion github
-  // on en a besoin pour appeler l'api github au nom de l'utilisateur
   accessToken String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  // dates gerees automatiquement par prisma
-  createdAt   DateTime @default(now())  // date de creation du compte
-  updatedAt   DateTime @updatedAt       // mis a jour automatiquement a chaque modification
-
-  // relations : un utilisateur possede plusieurs depots et concepts
-  // ces champs ne sont pas des colonnes reelles dans la table,
-  // prisma les utilise pour les jointures
   repositories Repository[]
   concepts     Concept[]
 }
 
-// ============================================================
-// modele : repository
-// represente un depot github appartenant a un utilisateur
-// un depot contient plusieurs commits
-// ============================================================
 model Repository {
-  // identifiant interne dans notre base
   id           Int      @id @default(autoincrement())
-
-  // identifiant du depot cote github (un nombre unique chez eux)
   githubId     Int      @unique
-
-  // nom court du depot (ex: "commitmind")
   name         String
-
-  // nom complet avec le proprietaire (ex: "john/commitmind")
-  // on en a besoin pour appeler l'api github
   fullName     String
-
-  // description du depot (peut etre vide)
   description  String?
-
-  // si le depot est prive ou public
   private      Boolean  @default(false)
-
-  // date de la derniere synchronisation des commits
-  // null si on n'a jamais synchronise ce depot
   lastSyncedAt DateTime?
-
-  // dates automatiques
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  // cle etrangere : chaque depot appartient a un utilisateur
-  // userId est la colonne reelle dans la table
-  // user est la relation prisma pour faire les jointures
   userId Int
   user   User @relation(fields: [userId], references: [id])
 
-  // un depot peut avoir plusieurs commits
   commits Commit[]
 }
 
-// ============================================================
-// modele : commit
-// represente un commit git recupere depuis github
-// un commit appartient a un depot et peut avoir des fichiers
-// et des concepts associes
-// ============================================================
 model Commit {
-  // identifiant interne dans notre base
   id           Int      @id @default(autoincrement())
-
-  // le sha est l'identifiant unique d'un commit dans git
-  // c'est une chaine hexadecimale comme "a3f8c2d..."
   sha          String   @unique
-
-  // le message du commit (ex: "fix login bug")
   message      String
-
-  // nom et email de la personne qui a fait le commit
   authorName   String
   authorEmail  String
-
-  // date exacte a laquelle le commit a ete fait
   committedAt  DateTime
-
-  // lien vers la page github du commit (peut etre null)
   url          String?
-
-  // date d'ajout dans notre base (pas la meme que committedAt)
   createdAt    DateTime @default(now())
 
-  // cle etrangere vers le depot parent
   repositoryId Int
   repository   Repository @relation(fields: [repositoryId], references: [id])
 
-  // un commit peut avoir plusieurs fichiers modifies
   files    CommitFile[]
-
-  // un commit peut etre lie a plusieurs concepts
-  // la liaison est stockee dans la table intermediaire commitconcept
   concepts CommitConcept[]
 }
 
-// ============================================================
-// modele : commitfile
-// represente un fichier modifie dans un commit
-// github nous donne ces infos quand on demande le detail d'un commit
-// ============================================================
 model CommitFile {
-  // identifiant interne
   id        Int    @id @default(autoincrement())
-
-  // chemin complet du fichier dans le depot (ex: "src/app.js")
   filename  String
-
-  // ce qui s'est passe avec ce fichier dans ce commit
-  // valeurs possibles : "added", "modified", "deleted", "renamed"
   status    String
-
-  // nombre de lignes ajoutees dans ce fichier
   additions Int    @default(0)
-
-  // nombre de lignes supprimees dans ce fichier
   deletions Int    @default(0)
-
-  // le "patch" contient le diff brut (les + et - des lignes)
-  // peut etre null pour les fichiers binaires ou tres gros fichiers
   patch     String?
 
-  // cle etrangere : ce fichier appartient a un commit precis
   commitId Int
   commit   Commit @relation(fields: [commitId], references: [id])
+
+  // Empeche de sauvegarder deux fois le même fichier pour un même commit
+  // si syncCommitFiles est appelé plusieurs fois sur le même commit.
+  @@unique([commitId, filename])
 }
 
-// ============================================================
-// modele : concept
-// represente un "concept" ou "tag d'apprentissage" cree par un user
-// exemple : "authentification", "pagination", "tests unitaires"
-// on peut ensuite lier ces concepts a des commits pour dire
-// "dans ce commit j'ai appris ou applique ce concept"
-// ============================================================
 model Concept {
-  // identifiant interne
   id          Int      @id @default(autoincrement())
-
-  // nom du concept, obligatoire (ex: "jwt", "recursivite")
   name        String
-
-  // description optionnelle pour expliquer le concept
   description String?
-
-  // dates automatiques
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // cle etrangere : chaque concept appartient a un utilisateur
   userId Int
   user   User @relation(fields: [userId], references: [id])
 
-  // liste des commits lies a ce concept (via table intermediaire)
   commits CommitConcept[]
   @@unique([name, userId])
 }
 
-// ============================================================
-// modele : commitconcept
-// c'est une table de liaison entre commit et concept
-// elle represente une relation "plusieurs a plusieurs" (many-to-many)
-// un commit peut avoir plusieurs concepts
-// un concept peut etre lie a plusieurs commits
-// sans cette table intermediaire, on ne pourrait pas faire ca
-// ============================================================
 model CommitConcept {
-  // identifiant interne de la liaison elle-meme
   id        Int      @id @default(autoincrement())
-
-  // date a laquelle la liaison a ete creee
   createdAt DateTime @default(now())
 
-  // cle etrangere vers le commit concerne
   commitId  Int
   commit    Commit  @relation(fields: [commitId], references: [id])
 
-  // cle etrangere vers le concept concerne
   conceptId Int
   concept   Concept @relation(fields: [conceptId], references: [id])
 
-  // contrainte unique : on ne peut pas lier deux fois le meme
-  // commit avec le meme concept - ca evite les doublons
-  // prisma utilise ca pour le upsert dans le controller
   @@unique([commitId, conceptId])
 }

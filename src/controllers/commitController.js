@@ -157,15 +157,29 @@ const syncCommitFiles = async (req, res) => {
     const savedFiles = []
 
     for (const file of files) {
-      const saved = await prisma.commitFile.create({
-        data: {
-          filename: file.filename,
+      // upsert sur (commitId, filename) pour éviter les doublons
+      // si cet endpoint est appelé plusieurs fois sur le même commit
+      const saved = await prisma.commitFile.upsert({
+        where: {
+          commitId_filename: {
+            commitId: commit.id,
+            filename: file.filename
+          }
+        },
+        update: {
           status: file.status,
           additions: file.additions,
           deletions: file.deletions,
           // Le patch peut être très volumineux pour les gros fichiers.
           // On le tronque à 10 000 caractères pour éviter de saturer
-          // la base de données et alourdir les réponses API.
+          // la bdd et alourdir les réponses API.
+          patch: file.patch ? file.patch.substring(0, 10000) : null
+        },
+        create: {
+          filename: file.filename,
+          status: file.status,
+          additions: file.additions,
+          deletions: file.deletions,
           patch: file.patch ? file.patch.substring(0, 10000) : null,
           commitId: commit.id
         }

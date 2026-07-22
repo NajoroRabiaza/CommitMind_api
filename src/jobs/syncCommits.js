@@ -1,6 +1,7 @@
 const cron = require('node-cron')
 const prisma = require('../utils/prisma')
 const { getRepositoryCommits } = require('../services/githubService')
+const { decrypt } = require('../utils/crypto')
 
 const syncAllUsersCommits = async () => {
   console.log(`[cron] starting sync - ${new Date().toISOString()}`)
@@ -12,6 +13,10 @@ const syncAllUsersCommits = async () => {
     for (const user of users) {
       console.log(`[cron] syncing user: ${user.username}`)
 
+      // Le token est déchiffré ici pour ce cycle d'exécution du cron.
+      // Il n'est jamais stocké déchiffré, uniquement utilisé en mémoire.
+      const decryptedToken = decrypt(user.accessToken)
+
       const repositories = await prisma.repository.findMany({
         where: { userId: user.id }
       })
@@ -21,7 +26,7 @@ const syncAllUsersCommits = async () => {
           const [owner, repo] = repository.fullName.split('/')
 
           const commits = await getRepositoryCommits(
-            user.accessToken,
+            decryptedToken,
             owner,
             repo,
             repository.lastSyncedAt

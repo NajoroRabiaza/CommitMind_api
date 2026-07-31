@@ -20,7 +20,6 @@ const crypto = require('crypto')
 
 const ALGORITHM = 'aes-256-gcm'
 const IV_LENGTH = 16
-const KEY_LENGTH = 32
 
 const getKey = () => {
   const hex = process.env.ENCRYPTION_KEY
@@ -38,8 +37,8 @@ const getKey = () => {
  */
 const encrypt = (text) => {
   const key = getKey()
-  // Un IV (vecteur d'initialisation) aléatoire est généré à chaque chiffrement
-  // pour garantir que deux chiffrements du même texte donnent des résultats différents
+  // Un IV aléatoire est généré à chaque chiffrement pour garantir
+  // que deux chiffrements du même texte donnent des résultats différents
   const iv = crypto.randomBytes(IV_LENGTH)
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv)
 

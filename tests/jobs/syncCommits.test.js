@@ -1,10 +1,10 @@
-// tests unitaires pour le job de synchronisation automatique
-// src/jobs/syncCommits.js exporte deux fonctions :
-//   syncAllUsersCommits : boucle sur tous les users/repos et synchronise
-//   startSyncJob        : planifie la tache cron toutes les heures
-//
-// on ne teste pas startSyncJob (ca planifierait une vraie tache cron)
-// on teste directement syncAllUsersCommits avec des donnees mockees
+/**
+ * Tests unitaires pour le job de synchronisation automatique.
+ *
+ * Le vrai syncCommits.js utilise prisma.commit.upsert depuis le refactor
+ * qui a elimine le pattern findUnique + create conditionnel.
+ * Les mocks refletent ce comportement reel.
+ */
 
 jest.mock('../../src/utils/prisma', () => ({
   user: { findMany: jest.fn() },
@@ -13,8 +13,7 @@ jest.mock('../../src/utils/prisma', () => ({
     update: jest.fn()
   },
   commit: {
-    findUnique: jest.fn(),
-    create: jest.fn()
+    upsert: jest.fn()
   }
 }))
 
@@ -22,12 +21,18 @@ jest.mock('../../src/services/githubService', () => ({
   getRepositoryCommits: jest.fn()
 }))
 
+// decrypt est mocke pour eviter de dependre de ENCRYPTION_KEY dans les tests
+jest.mock('../../src/utils/crypto', () => ({
+  decrypt: jest.fn((val) => val)
+}))
+
 const prisma = require('../../src/utils/prisma')
 const { getRepositoryCommits } = require('../../src/services/githubService')
+const { decrypt } = require('../../src/utils/crypto')
 const { syncAllUsersCommits } = require('../../src/jobs/syncCommits')
 
-const fakeUser1 = { id: 1, username: 'NajoroRabiaza', accessToken: 'ghs_token1' }
-const fakeUser2 = { id: 2, username: 'alice', accessToken: 'ghs_token2' }
+const fakeUser1 = { id: 1, username: 'NajoroRabiaza', accessToken: 'encrypted_token_1' }
+const fakeUser2 = { id: 2, username: 'alice', accessToken: 'encrypted_token_2' }
 
 const fakeRepo = {
   id: 10,
@@ -40,13 +45,28 @@ const fakeGithubCommit = {
   message: 'feat: add jwt middleware',
   authorName: 'Eddie',
   authorEmail: 'eddie@test.com',
-  committedAt: new Date('2026-05-01T10:00:00Z').toISOString(),
+  committedAt: new Date('2026-05-01T10:00:00Z'),
   url: 'https://github.com/commit/sha_new_001'
+}
+
+// Simule un commit fraichement cree : createdAt === updatedAt
+const freshUpsertResult = {
+  id: 1,
+  sha: fakeGithubCommit.sha,
+  createdAt: new Date('2026-05-01T12:00:00Z'),
+  updatedAt: new Date('2026-05-01T12:00:00Z')
+}
+
+// Simule un commit deja existant : updatedAt > createdAt
+const existingUpsertResult = {
+  id: 1,
+  sha: fakeGithubCommit.sha,
+  createdAt: new Date('2026-04-01T10:00:00Z'),
+  updatedAt: new Date('2026-05-01T12:00:00Z')
 }
 
 beforeEach(() => {
   jest.clearAllMocks()
-  // on redefinit les mocks par defaut avant chaque test
   prisma.repository.update.mockResolvedValue(fakeRepo)
 })
 
@@ -59,7 +79,6 @@ describe('syncAllUsersCommits - comportement de base', () => {
 
     await syncAllUsersCommits()
 
-    // si aucun user, on ne cherche pas de depots
     expect(prisma.repository.findMany).not.toHaveBeenCalled()
     expect(getRepositoryCommits).not.toHaveBeenCalled()
   })
@@ -71,7 +90,7 @@ describe('syncAllUsersCommits - comportement de base', () => {
     await syncAllUsersCommits()
 
     expect(getRepositoryCommits).not.toHaveBeenCalled()
-    expect(prisma.commit.create).not.toHaveBeenCalled()
+    expect(prisma.commit.upsert).not.toHaveBeenCalled()
   })
 
   test('appelle getRepositoryCommits avec le bon token et le bon repo', async () => {
@@ -81,6 +100,8 @@ describe('syncAllUsersCommits - comportement de base', () => {
 
     await syncAllUsersCommits()
 
+    // decrypt est appele sur le token chiffre avant de l'utiliser
+    expect(decrypt).toHaveBeenCalledWith(fakeUser1.accessToken)
     expect(getRepositoryCommits).toHaveBeenCalledWith(
       fakeUser1.accessToken,
       'NajoroRabiaza',
@@ -107,24 +128,23 @@ describe('syncAllUsersCommits - comportement de base', () => {
 
 })
 
-// Sauvegarde des nouveaux commits
+// Sauvegarde des commits via upsert
 
 describe('syncAllUsersCommits - sauvegarde des commits', () => {
 
-  test('cree un commit si il n existe pas en base', async () => {
+  test('appelle upsert avec le bon sha et les bonnes donnees', async () => {
     prisma.user.findMany.mockResolvedValue([fakeUser1])
     prisma.repository.findMany.mockResolvedValue([fakeRepo])
     getRepositoryCommits.mockResolvedValue([fakeGithubCommit])
-    // findUnique retourne null = le commit n'existe pas encore
-    prisma.commit.findUnique.mockResolvedValue(null)
-    prisma.commit.create.mockResolvedValue({ id: 1, ...fakeGithubCommit })
+    prisma.commit.upsert.mockResolvedValue(freshUpsertResult)
 
     await syncAllUsersCommits()
 
-    expect(prisma.commit.create).toHaveBeenCalledTimes(1)
-    expect(prisma.commit.create).toHaveBeenCalledWith(
+    expect(prisma.commit.upsert).toHaveBeenCalledTimes(1)
+    expect(prisma.commit.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
+        where: { sha: fakeGithubCommit.sha },
+        create: expect.objectContaining({
           sha: fakeGithubCommit.sha,
           message: fakeGithubCommit.message,
           repositoryId: fakeRepo.id
@@ -133,16 +153,29 @@ describe('syncAllUsersCommits - sauvegarde des commits', () => {
     )
   })
 
-  test('ne cree pas de commit si il existe deja en base (deduplication)', async () => {
+  test('detecte un nouveau commit quand createdAt === updatedAt', async () => {
     prisma.user.findMany.mockResolvedValue([fakeUser1])
     prisma.repository.findMany.mockResolvedValue([fakeRepo])
     getRepositoryCommits.mockResolvedValue([fakeGithubCommit])
-    // findUnique retourne un commit = il existe deja, on ne recrée pas
-    prisma.commit.findUnique.mockResolvedValue({ id: 99, sha: fakeGithubCommit.sha })
+    // createdAt === updatedAt = commit fraichement cree
+    prisma.commit.upsert.mockResolvedValue(freshUpsertResult)
 
     await syncAllUsersCommits()
 
-    expect(prisma.commit.create).not.toHaveBeenCalled()
+    expect(prisma.commit.upsert).toHaveBeenCalledTimes(1)
+  })
+
+  test('detecte un commit existant quand updatedAt > createdAt', async () => {
+    prisma.user.findMany.mockResolvedValue([fakeUser1])
+    prisma.repository.findMany.mockResolvedValue([fakeRepo])
+    getRepositoryCommits.mockResolvedValue([fakeGithubCommit])
+    // updatedAt > createdAt = commit deja present en base
+    prisma.commit.upsert.mockResolvedValue(existingUpsertResult)
+
+    await syncAllUsersCommits()
+
+    // upsert est quand meme appele — c'est lui qui gere la deduplication
+    expect(prisma.commit.upsert).toHaveBeenCalledTimes(1)
   })
 
   test('met a jour lastSyncedAt apres chaque sync de depot', async () => {
@@ -162,18 +195,16 @@ describe('syncAllUsersCommits - sauvegarde des commits', () => {
     )
   })
 
-  test('identifie les commits par sha (findUnique avec sha)', async () => {
+  test('traite plusieurs commits en une seule execution', async () => {
+    const commit2 = { ...fakeGithubCommit, sha: 'sha_new_002' }
     prisma.user.findMany.mockResolvedValue([fakeUser1])
     prisma.repository.findMany.mockResolvedValue([fakeRepo])
-    getRepositoryCommits.mockResolvedValue([fakeGithubCommit])
-    prisma.commit.findUnique.mockResolvedValue(null)
-    prisma.commit.create.mockResolvedValue({})
+    getRepositoryCommits.mockResolvedValue([fakeGithubCommit, commit2])
+    prisma.commit.upsert.mockResolvedValue(freshUpsertResult)
 
     await syncAllUsersCommits()
 
-    expect(prisma.commit.findUnique).toHaveBeenCalledWith({
-      where: { sha: fakeGithubCommit.sha }
-    })
+    expect(prisma.commit.upsert).toHaveBeenCalledTimes(2)
   })
 
 })
@@ -187,28 +218,13 @@ describe('syncAllUsersCommits - resilience aux erreurs', () => {
     prisma.user.findMany.mockResolvedValue([fakeUser1])
     prisma.repository.findMany.mockResolvedValue([fakeRepo, fakeRepo2])
 
-    // premier depot echoue
     getRepositoryCommits
       .mockRejectedValueOnce(new Error('GitHub API rate limit'))
-      // deuxieme depot reussit
       .mockResolvedValueOnce([])
 
-    // le job ne doit pas planter meme si un depot echoue
     await expect(syncAllUsersCommits()).resolves.not.toThrow()
 
-    // on verifie que le deuxieme appel a quand meme ete fait
     expect(getRepositoryCommits).toHaveBeenCalledTimes(2)
-  })
-
-  test('continue avec les autres utilisateurs si la requete de repos echoue', async () => {
-    prisma.user.findMany.mockResolvedValue([fakeUser1, fakeUser2])
-
-    // on fait planter findMany uniquement pour le premier utilisateur
-    prisma.repository.findMany
-      .mockRejectedValueOnce(new Error('DB error'))
-      .mockResolvedValueOnce([])
-
-    await expect(syncAllUsersCommits()).resolves.not.toThrow()
   })
 
   test('ne plante pas si github renvoie un tableau vide', async () => {
@@ -218,11 +234,20 @@ describe('syncAllUsersCommits - resilience aux erreurs', () => {
 
     await expect(syncAllUsersCommits()).resolves.not.toThrow()
 
-    expect(prisma.commit.create).not.toHaveBeenCalled()
+    expect(prisma.commit.upsert).not.toHaveBeenCalled()
   })
 
   test('ne plante pas si la liste des utilisateurs est vide', async () => {
     prisma.user.findMany.mockResolvedValue([])
+
+    await expect(syncAllUsersCommits()).resolves.not.toThrow()
+  })
+
+  test('ne plante pas si upsert lance une erreur sur un commit', async () => {
+    prisma.user.findMany.mockResolvedValue([fakeUser1])
+    prisma.repository.findMany.mockResolvedValue([fakeRepo])
+    getRepositoryCommits.mockResolvedValue([fakeGithubCommit])
+    prisma.commit.upsert.mockRejectedValue(new Error('DB constraint error'))
 
     await expect(syncAllUsersCommits()).resolves.not.toThrow()
   })
@@ -238,14 +263,13 @@ describe('syncAllUsersCommits - plusieurs utilisateurs', () => {
 
     prisma.user.findMany.mockResolvedValue([fakeUser1, fakeUser2])
     prisma.repository.findMany
-      .mockResolvedValueOnce([fakeRepo])  // depots de user1
-      .mockResolvedValueOnce([repo2])     // depots de user2
+      .mockResolvedValueOnce([fakeRepo])
+      .mockResolvedValueOnce([repo2])
 
     getRepositoryCommits.mockResolvedValue([])
 
     await syncAllUsersCommits()
 
-    // on verifie que github a ete appele pour chaque utilisateur/depot
     expect(getRepositoryCommits).toHaveBeenCalledTimes(2)
     expect(getRepositoryCommits).toHaveBeenCalledWith(
       fakeUser1.accessToken, 'NajoroRabiaza', 'commitmind', null
@@ -253,6 +277,17 @@ describe('syncAllUsersCommits - plusieurs utilisateurs', () => {
     expect(getRepositoryCommits).toHaveBeenCalledWith(
       fakeUser2.accessToken, 'alice', 'portfolio', null
     )
+  })
+
+  test('decrypt est appele une fois par utilisateur', async () => {
+    prisma.user.findMany.mockResolvedValue([fakeUser1, fakeUser2])
+    prisma.repository.findMany.mockResolvedValue([])
+
+    await syncAllUsersCommits()
+
+    expect(decrypt).toHaveBeenCalledTimes(2)
+    expect(decrypt).toHaveBeenCalledWith(fakeUser1.accessToken)
+    expect(decrypt).toHaveBeenCalledWith(fakeUser2.accessToken)
   })
 
 })

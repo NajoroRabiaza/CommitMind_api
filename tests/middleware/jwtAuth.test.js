@@ -12,7 +12,7 @@ jest.mock('../../src/utils/prisma', () => ({
     findUnique: jest.fn()
   }
 }))
-
+ 
 // crypto.js est mocke car jwtAuth appelle decrypt(user.accessToken).
 // Sans ce mock, decrypt() tenterait de dechiffrer un token en clair
 // et leverait une erreur de format, faisant echouer tous les tests.

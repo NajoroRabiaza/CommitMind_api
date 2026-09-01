@@ -1,3 +1,10 @@
+// Schéma Prisma — CommitMind API
+//
+// Les cascades onDelete sont définies explicitement sur toutes les relations
+// pour garantir qu'une suppression en cascade soit propre et prévisible :
+// supprimer un User supprime ses Repository, qui suppriment leurs Commit,
+// qui suppriment leurs CommitFile et CommitConcept.
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -22,51 +29,51 @@ model User {
 }
 
 model Repository {
-  id           Int      @id @default(autoincrement())
-  githubId     Int      @unique
+  id           Int       @id @default(autoincrement())
+  githubId     Int       @unique
   name         String
   fullName     String
   description  String?
-  private      Boolean  @default(false)
+  private      Boolean   @default(false)
   lastSyncedAt DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   userId Int
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   commits Commit[]
 }
 
 model Commit {
-  id           Int      @id @default(autoincrement())
-  sha          String   @unique
-  message      String
-  authorName   String
-  authorEmail  String
-  committedAt  DateTime
-  url          String?
-  createdAt    DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  sha         String   @unique
+  message     String
+  authorName  String
+  authorEmail String
+  committedAt DateTime
+  url         String?
+  createdAt   DateTime @default(now())
 
   repositoryId Int
-  repository   Repository @relation(fields: [repositoryId], references: [id])
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
 
   files    CommitFile[]
   concepts CommitConcept[]
 }
 
 model CommitFile {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   filename  String
   status    String
-  additions Int    @default(0)
-  deletions Int    @default(0)
+  additions Int     @default(0)
+  deletions Int     @default(0)
   patch     String?
 
   commitId Int
-  commit   Commit @relation(fields: [commitId], references: [id])
+  commit   Commit @relation(fields: [commitId], references: [id], onDelete: Cascade)
 
-  // Empeche de sauvegarder deux fois le même fichier pour un même commit
+  // Empêche de sauvegarder deux fois le même fichier pour un même commit
   // si syncCommitFiles est appelé plusieurs fois sur le même commit.
   @@unique([commitId, filename])
 }
@@ -79,9 +86,10 @@ model Concept {
   updatedAt   DateTime @updatedAt
 
   userId Int
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   commits CommitConcept[]
+
   @@unique([name, userId])
 }
 
@@ -89,11 +97,11 @@ model CommitConcept {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
 
-  commitId  Int
-  commit    Commit  @relation(fields: [commitId], references: [id])
+  commitId Int
+  commit   Commit @relation(fields: [commitId], references: [id], onDelete: Cascade)
 
   conceptId Int
-  concept   Concept @relation(fields: [conceptId], references: [id])
+  concept   Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
 
   @@unique([commitId, conceptId])
 }

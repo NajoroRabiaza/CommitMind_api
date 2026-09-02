@@ -1,4 +1,5 @@
 const express = require('express')
+const path = require('path')
 const passport = require('./middleware/passport')
 
 const healthRouter = require('./routes/health')
@@ -13,6 +14,11 @@ const app = express()
 
 app.use(express.json())
 app.use(passport.initialize())
+
+// Playground de test — servi sur la route racine
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'playground.html'))
+})
 
 app.use(healthRouter)
 app.use(authRouter)

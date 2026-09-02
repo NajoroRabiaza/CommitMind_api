@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CommitMind API Playground</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --surface2:  #21262d;
+      --border:    #30363d;
+      --terminal:  #010409;
+      --text:      #e6edf3;
+      --muted:     #8b949e;
+      --green:     #238636;
+      --green-bright: #39d353;
+      --blue:      #1f6feb;
+      --orange:    #d29922;
+      --red:       #da3633;
+      --purple:    #8b5cf6;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* HEADER */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 52px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 28px;
+      height: 28px;
+      background: var(--green);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .header-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .status-dot {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green-bright);
+      box-shadow: 0 0 6px var(--green-bright);
+    }
+
+    /* TOKEN BAR */
+    .token-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .token-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    .token-input {
+      flex: 1;
+      max-width: 520px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .token-input:focus { border-color: var(--green); }
+    .token-input::placeholder { color: var(--muted); }
+
+    .token-hint {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .token-hint a {
+      color: var(--green-bright);
+      text-decoration: none;
+    }
+
+    .token-hint a:hover { text-decoration: underline; }
+
+    /* MAIN LAYOUT */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* LEFT PANEL */
+    .left {
+      width: 420px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .left::-webkit-scrollbar { width: 4px; }
+    .left::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .section-label {
+      padding: 16px 16px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-top: 1px solid var(--border);
+    }
+
+    .section-label:first-child { border-top: none; }
+
+    .route-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 16px;
+      cursor: pointer;
+      transition: background 0.1s;
+      border-left: 2px solid transparent;
+    }
+
+    .route-item:hover { background: var(--surface2); }
+
+    .route-item.active {
+      background: var(--surface2);
+      border-left-color: var(--green);
+    }
+
+    .method {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 6px;
+      border-radius: 4px;
+      min-width: 42px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .GET    { background: rgba(31,111,235,0.15); color: #79c0ff; }
+    .POST   { background: rgba(35,134,54,0.15);  color: #56d364; }
+    .PUT    { background: rgba(210,153,34,0.15); color: #e3b341; }
+    .DELETE { background: rgba(218,54,51,0.15);  color: #ff7b72; }
+
+    .route-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .route-desc {
+      font-size: 10px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .run-btn {
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s, opacity 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .run-btn:hover { background: #2ea043; }
+    .run-btn:active { opacity: 0.8; }
+    .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* BODY SECTION pour les requetes qui ont un body */
+    .body-section {
+      display: none;
+      padding: 0 16px 10px;
+    }
+
+    .body-section.visible { display: block; }
+
+    .body-textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text);
+      resize: vertical;
+      min-height: 70px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .body-textarea:focus { border-color: var(--green); }
+
+    .body-label {
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    /* RIGHT PANEL */
+    .right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--terminal);
+      overflow: hidden;
+    }
+
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .terminal-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 5px;
+    }
+
+    .terminal-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .td-red    { background: #ff5f57; }
+    .td-yellow { background: #febc2e; }
+    .td-green  { background: #28c840; }
+
+    .clear-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 3px 10px;
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .clear-btn:hover { border-color: var(--text); color: var(--text); }
+
+    .terminal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .terminal-body::-webkit-scrollbar { width: 4px; }
+    .terminal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .terminal-placeholder {
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 10px;
+      text-align: center;
+    }
+
+    .terminal-placeholder .icon {
+      font-size: 32px;
+      opacity: 0.3;
+    }
+
+    .terminal-placeholder p {
+      font-size: 12px;
+      opacity: 0.5;
+    }
+
+    .log-entry { margin-bottom: 20px; }
+
+    .log-request {
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .log-arrow { color: var(--green-bright); }
+
+    .log-status-ok  { color: var(--green-bright); }
+    .log-status-err { color: #ff7b72; }
+    .log-status-warn { color: #e3b341; }
+
+    .log-time { color: #444c56; font-size: 10px; }
+
+    .log-body {
+      color: var(--green-bright);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .log-error-body { color: #ff7b72; white-space: pre-wrap; }
+
+    .log-divider {
+      border: none;
+      border-top: 1px solid #21262d;
+      margin: 16px 0;
+    }
+
+    .loading-dots::after {
+      content: '';
+      animation: dots 1.2s steps(3, end) infinite;
+    }
+
+    @keyframes dots {
+      0%   { content: '.'; }
+      33%  { content: '..'; }
+      66%  { content: '...'; }
+      100% { content: ''; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo">CM</div>
+    <span class="header-title">CommitMind</span>
+    <span class="header-subtitle">API Playground</span>
+  </div>
+  <div class="status-dot">
+    <span class="dot"></span>
+    Live — commitmind.onrender.com
+  </div>
+</header>
+
+<div class="token-bar">
+  <span class="token-label">JWT Token</span>
+  <input
+    class="token-input"
+    id="tokenInput"
+    type="password"
+    placeholder="Paste your token here after login with GitHub..."
+  />
+  <span class="token-hint">
+    No token yet? <a href="/auth/github" target="_blank">Login with GitHub</a> to get one.
+  </span>
+</div>
+
+<div class="main">
+
+  <!-- LEFT : liste des routes -->
+  <div class="left" id="routeList"></div>
+
+  <!-- RIGHT : terminal -->
+  <div class="right">
+    <div class="terminal-header">
+      <div class="terminal-dots">
+        <span class="td-red"></span>
+        <span class="td-yellow"></span>
+        <span class="td-green"></span>
+      </div>
+      <div class="terminal-title">response output</div>
+      <button class="clear-btn" onclick="clearTerminal()">Clear</button>
+    </div>
+    <div class="terminal-body" id="terminal">
+      <div class="terminal-placeholder" id="placeholder">
+        <div class="icon">&#x276F;_</div>
+        <p>Select a request on the left and hit Run<br>to see the response here.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const BASE = window.location.origin
+
+  // Définition de toutes les routes
+  const ROUTES = [
+    {
+      section: 'Health',
+      routes: [
+        { method: 'GET', path: '/health', desc: 'API status', auth: false }
+      ]
+    },
+    {
+      section: 'Auth',
+      routes: [
+        { method: 'GET', path: '/auth/github', desc: 'Login with GitHub', auth: false, external: true },
+        { method: 'GET', path: '/auth/me', desc: 'Current user profile', auth: true },
+        { method: 'GET', path: '/auth/logout', desc: 'Logout info', auth: true }
+      ]
+    },
+    {
+      section: 'Repositories',
+      routes: [
+        { method: 'POST', path: '/repositories/sync', desc: 'Sync repos from GitHub', auth: true },
+        { method: 'GET',  path: '/repositories', desc: 'List repositories', auth: true }
+      ]
+    },
+    {
+      section: 'Commits',
+      routes: [
+        { method: 'POST', path: '/repositories/:repoId/commits/sync', desc: 'Sync commits', auth: true, params: ['repoId'] },
+        { method: 'GET',  path: '/repositories/:repoId/commits', desc: 'List commits', auth: true, params: ['repoId'] },
+        { method: 'POST', path: '/repositories/:repoId/commits/:commitId/files/sync', desc: 'Sync commit files', auth: true, params: ['repoId', 'commitId'] },
+        { method: 'GET',  path: '/repositories/:repoId/commits/:commitId/files', desc: 'List commit files', auth: true, params: ['repoId', 'commitId'] }
+      ]
+    },
+    {
+      section: 'Concepts',
+      routes: [
+        { method: 'POST',   path: '/concepts', desc: 'Create a concept', auth: true, body: '{\n  "name": "JWT Authentication",\n  "description": "Token-based auth"\n}' },
+        { method: 'GET',    path: '/concepts', desc: 'List concepts', auth: true },
+        { method: 'GET',    path: '/concepts/:id', desc: 'Get a concept', auth: true, params: ['id'] },
+        { method: 'PUT',    path: '/concepts/:id', desc: 'Update a concept', auth: true, params: ['id'], body: '{\n  "name": "JWT Authentication",\n  "description": "Updated description"\n}' },
+        { method: 'DELETE', path: '/concepts/:id', desc: 'Delete a concept', auth: true, params: ['id'] },
+        { method: 'GET',    path: '/concepts/:conceptId/commits', desc: 'Commits by concept', auth: true, params: ['conceptId'] }
+      ]
+    },
+    {
+      section: 'Linking',
+      routes: [
+        { method: 'POST',   path: '/repositories/:repoId/commits/:commitId/concepts', desc: 'Link concept manually', auth: true, params: ['repoId', 'commitId'], body: '{\n  "conceptId": 1\n}' },
+        { method: 'POST',   path: '/repositories/:repoId/commits/:commitId/concepts/auto', desc: 'Auto-detect concepts', auth: true, params: ['repoId', 'commitId'] },
+        { method: 'DELETE', path: '/repositories/:repoId/commits/:commitId/concepts/:conceptId', desc: 'Unlink concept', auth: true, params: ['repoId', 'commitId', 'conceptId'] }
+      ]
+    },
+    {
+      section: 'History & Stats',
+      routes: [
+        { method: 'GET', path: '/history', desc: 'Learning timeline', auth: true },
+        { method: 'GET', path: '/stats',   desc: 'Progression stats', auth: true }
+      ]
+    }
+  ]
+
+  // Génère la liste de routes dans le panneau gauche
+  function buildRouteList() {
+    const container = document.getElementById('routeList')
+
+    ROUTES.forEach(group => {
+      const label = document.createElement('div')
+      label.className = 'section-label'
+      label.textContent = group.section
+      container.appendChild(label)
+
+      group.routes.forEach(route => {
+        const item = document.createElement('div')
+        item.className = 'route-item'
+
+        const method = document.createElement('span')
+        method.className = `method ${route.method}`
+        method.textContent = route.method
+
+        const path = document.createElement('span')
+        path.className = 'route-path'
+        path.textContent = route.path
+
+        const desc = document.createElement('span')
+        desc.className = 'route-desc'
+        desc.textContent = route.desc
+
+        const btn = document.createElement('button')
+        btn.className = 'run-btn'
+        btn.textContent = 'Run'
+        btn.onclick = (e) => {
+          e.stopPropagation()
+          // Ouvre GitHub dans un nouvel onglet au lieu d'appeler l'API en fetch
+          if (route.external) {
+            window.open(BASE + route.path, '_blank')
+            return
+          }
+          runRoute(route, btn, bodyArea ? bodyArea.value : null)
+        }
+
+        item.appendChild(method)
+        item.appendChild(path)
+        item.appendChild(desc)
+
+        // Champ body pour les routes qui en ont besoin
+        let bodyArea = null
+        if (route.body) {
+          const bodyWrap = document.createElement('div')
+          bodyWrap.className = 'body-section visible'
+
+          const bodyLabel = document.createElement('div')
+          bodyLabel.className = 'body-label'
+          bodyLabel.textContent = 'Request body (JSON)'
+
+          bodyArea = document.createElement('textarea')
+          bodyArea.className = 'body-textarea'
+          bodyArea.value = route.body
+          bodyArea.rows = 4
+
+          bodyWrap.appendChild(bodyLabel)
+          bodyWrap.appendChild(bodyArea)
+
+          // Le bouton run doit capturer bodyArea dans sa closure
+          btn.onclick = (e) => {
+            e.stopPropagation()
+            runRoute(route, btn, bodyArea.value)
+          }
+
+          item.appendChild(btn)
+          container.appendChild(item)
+          container.appendChild(bodyWrap)
+        } else {
+          item.appendChild(btn)
+          container.appendChild(item)
+        }
+      })
+    })
+  }
+
+  // Remplace les :param dans le path en demandant leur valeur
+  function resolvePath(route) {
+    let path = route.path
+
+    if (!route.params || route.params.length === 0) return path
+
+    for (const param of route.params) {
+      const value = prompt(`Enter value for :${param}`)
+      if (value === null) return null
+      path = path.replace(`:${param}`, value.trim())
+    }
+
+    return path
+  }
+
+  // Lance la requête et affiche le résultat dans le terminal
+  async function runRoute(route, btn, bodyValue) {
+    const token = document.getElementById('tokenInput').value.trim()
+
+    if (route.auth && !token) {
+      appendLog(route, null, null, 'No token provided. Paste your JWT token in the field above.')
+      return
+    }
+
+    const resolvedPath = resolvePath(route)
+    if (resolvedPath === null) return
+
+    const url = BASE + resolvedPath
+    const headers = { 'Content-Type': 'application/json' }
+    if (route.auth && token) headers['Authorization'] = `Bearer ${token}`
+
+    const options = { method: route.method, headers }
+
+    if (bodyValue && (route.method === 'POST' || route.method === 'PUT')) {
+      try {
+        JSON.parse(bodyValue)
+        options.body = bodyValue
+      } catch {
+        appendLog(route, resolvedPath, null, 'Invalid JSON in request body.')
+        return
+      }
+    }
+
+    btn.disabled = true
+    btn.textContent = 'Running'
+
+    const startTime = Date.now()
+    appendLoading(route, resolvedPath)
+
+    try {
+      const res = await fetch(url, options)
+      const duration = Date.now() - startTime
+      let data
+
+      const contentType = res.headers.get('content-type') || ''
+      if (contentType.includes('application/json')) {
+        data = await res.json()
+      } else {
+        data = await res.text()
+      }
+
+      updateLoading(route, resolvedPath, res.status, data, duration)
+    } catch (err) {
+      updateLoadingError(route, resolvedPath, err.message)
+    } finally {
+      btn.disabled = false
+      btn.textContent = 'Run'
+    }
+  }
+
+  let loadingId = null
+
+  function appendLoading(route, resolvedPath) {
+    hidePlaceholder()
+    const terminal = document.getElementById('terminal')
+
+    const id = `log-${Date.now()}`
+    loadingId = id
+
+    const entry = document.createElement('div')
+    entry.className = 'log-entry'
+    entry.id = id
+
+    entry.innerHTML = `
+      <div class="log-request">
+        <span class="log-arrow">&#x276F;</span>
+        <span class="method ${route.method}" style="font-family:JetBrains Mono,monospace;font-size:10px;padding:2px 6px;border-radius:4px;">${route.method}</span>
+        <span style="color:#e6edf3">${resolvedPath}</span>
+      </div>
+      <div class="log-body loading-dots">Waiting</div>
+    `
+
+    terminal.appendChild(entry)
+    terminal.scrollTop = terminal.scrollHeight
+  }
+
+  function updateLoading(route, resolvedPath, status, data, duration) {
+    const entry = document.getElementById(loadingId)
+    if (!entry) return
+
+    const isOk = status >= 200 && status < 300
+    const isWarn = status >= 400 && status < 500
+    const statusClass = isOk ? 'log-status-ok' : isWarn ? 'log-status-warn' : 'log-status-err'
+    const bodyClass = isOk ? 'log-body' : 'log-error-body'
+
+    const formatted = typeof data === 'string' ? data : JSON.stringify(data, null, 2)
+
+    entry.innerHTML = `
+      <div class="log-request">
+        <span class="log-arrow">&#x276F;</span>
+        <span class="method ${route.method}" style="font-family:JetBrains Mono,monospace;font-size:10px;padding:2px 6px;border-radius:4px;">${route.method}</span>
+        <span style="color:#e6edf3">${resolvedPath}</span>
+        <span class="${statusClass}">${status}</span>
+        <span class="log-time">${duration}ms</span>
+      </div>
+      <div class="${bodyClass}">${escapeHtml(formatted)}</div>
+      <hr class="log-divider" />
+    `
+
+    const terminal = document.getElementById('terminal')
+    terminal.scrollTop = terminal.scrollHeight
+  }
+
+  function updateLoadingError(route, resolvedPath, message) {
+    const entry = document.getElementById(loadingId)
+    if (!entry) return
+
+    entry.innerHTML = `
+      <div class="log-request">
+        <span class="log-arrow">&#x276F;</span>
+        <span class="method ${route.method}" style="font-family:JetBrains Mono,monospace;font-size:10px;padding:2px 6px;border-radius:4px;">${route.method}</span>
+        <span style="color:#e6edf3">${resolvedPath}</span>
+        <span class="log-status-err">Network Error</span>
+      </div>
+      <div class="log-error-body">${escapeHtml(message)}</div>
+      <hr class="log-divider" />
+    `
+  }
+
+  function appendLog(route, resolvedPath, status, message) {
+    hidePlaceholder()
+    const terminal = document.getElementById('terminal')
+
+    const entry = document.createElement('div')
+    entry.className = 'log-entry'
+    entry.innerHTML = `
+      <div class="log-request">
+        <span class="log-arrow">&#x276F;</span>
+        <span style="color:#e6edf3">${resolvedPath || route.path}</span>
+        <span class="log-status-warn">Warning</span>
+      </div>
+      <div class="log-error-body">${escapeHtml(message)}</div>
+      <hr class="log-divider" />
+    `
+
+    terminal.appendChild(entry)
+    terminal.scrollTop = terminal.scrollHeight
+  }
+
+  function hidePlaceholder() {
+    const p = document.getElementById('placeholder')
+    if (p) p.style.display = 'none'
+  }
+
+  function clearTerminal() {
+    const terminal = document.getElementById('terminal')
+    terminal.innerHTML = `
+      <div class="terminal-placeholder" id="placeholder">
+        <div class="icon">&#x276F;_</div>
+        <p>Select a request on the left and hit Run<br>to see the response here.</p>
+      </div>
+    `
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+  }
+
+  buildRouteList()
+</script>
+</body>
+</html>

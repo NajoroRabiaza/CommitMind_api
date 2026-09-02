@@ -10,19 +10,26 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0d1117;
-      --surface:   #161b22;
-      --surface2:  #21262d;
-      --border:    #30363d;
-      --terminal:  #010409;
-      --text:      #e6edf3;
-      --muted:     #8b949e;
-      --green:     #238636;
-      --green-bright: #39d353;
-      --blue:      #1f6feb;
-      --orange:    #d29922;
-      --red:       #da3633;
-      --purple:    #8b5cf6;
+      --white:      #ffffff;
+      --bg:         #f5f6f8;
+      --sidebar-bg: #f5f6f8;
+      --surface:    #ffffff;
+      --border:     #e5e7eb;
+      --border-light: #f0f1f3;
+      --text:       #111827;
+      --muted:      #6b7280;
+      --muted2:     #9ca3af;
+      --green:      #16a34a;
+      --green-btn:  #22c55e;
+      --green-hover:#16a34a;
+      --blue:       #2563eb;
+      --orange:     #d97706;
+      --red:        #dc2626;
+      --purple:     #7c3aed;
+      --terminal-bg:#0a0a0a;
+      --terminal-text: #e5e7eb;
+      --terminal-green: #4ade80;
+      --terminal-muted: #4b5563;
     }
 
     body {
@@ -33,6 +40,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      font-size: 13px;
     }
 
     /* HEADER */
@@ -40,85 +48,192 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
-      height: 52px;
-      background: var(--surface);
+      padding: 0 20px;
+      height: 50px;
+      background: var(--white);
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
+      z-index: 10;
     }
 
     .header-left {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .logo {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       background: var(--green);
-      border-radius: 6px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 500;
       color: #fff;
+      flex-shrink: 0;
     }
 
-    .header-title {
-      font-size: 14px;
+    .header-brand {
+      font-size: 15px;
       font-weight: 600;
       color: var(--text);
     }
 
-    .header-subtitle {
-      font-size: 12px;
+    .header-tag {
+      font-size: 11px;
       color: var(--muted);
-      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 7px;
     }
 
-    .status-dot {
+    .header-right {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
+      gap: 12px;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
       color: var(--muted);
     }
 
-    .dot {
-      width: 7px;
-      height: 7px;
+    .live-dot {
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      background: var(--green-bright);
-      box-shadow: 0 0 6px var(--green-bright);
+      background: var(--green-btn);
     }
 
-    /* TOKEN BAR */
-    .token-bar {
+    /* LAYOUT */
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+      padding: 12px 0;
+    }
+
+    .sidebar::-webkit-scrollbar { width: 3px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+
+    .sidebar-section-label {
+      padding: 10px 16px 5px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted2);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .sidebar-item {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 10px 24px;
-      background: var(--surface);
+      gap: 8px;
+      padding: 7px 16px;
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: background 0.1s;
+    }
+
+    .sidebar-item:hover {
+      background: var(--border-light);
+    }
+
+    .sidebar-item.active {
+      background: #e8f5e9;
+      border-left-color: var(--green);
+    }
+
+    .sidebar-item.active .sidebar-path {
+      color: var(--green);
+    }
+
+    .method-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 500;
+      padding: 2px 5px;
+      border-radius: 3px;
+      min-width: 36px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .GET    { background: #dbeafe; color: #1d4ed8; }
+    .POST   { background: #dcfce7; color: #15803d; }
+    .PUT    { background: #fef9c3; color: #a16207; }
+    .DELETE { background: #fee2e2; color: #b91c1c; }
+
+    .sidebar-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* MAIN CENTER */
+    .center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--white);
+      border-right: 1px solid var(--border);
+    }
+
+    .center-header {
+      padding: 14px 20px 0;
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
 
-    .token-label {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      white-space: nowrap;
+    .center-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 12px;
     }
 
-    .token-input {
+    .request-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .request-method {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 5px 10px;
+      border-radius: 5px;
+      flex-shrink: 0;
+    }
+
+    .request-url {
       flex: 1;
-      max-width: 520px;
-      background: var(--surface2);
+      background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 6px 12px;
@@ -126,192 +241,197 @@
       font-size: 12px;
       color: var(--text);
       outline: none;
-      transition: border-color 0.15s;
     }
 
-    .token-input:focus { border-color: var(--green); }
-    .token-input::placeholder { color: var(--muted); }
-
-    .token-hint {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .token-hint a {
-      color: var(--green-bright);
-      text-decoration: none;
-    }
-
-    .token-hint a:hover { text-decoration: underline; }
-
-    /* MAIN LAYOUT */
-    .main {
-      display: flex;
+    .center-body {
       flex: 1;
-      overflow: hidden;
-    }
-
-    /* LEFT PANEL */
-    .left {
-      width: 420px;
-      flex-shrink: 0;
-      background: var(--surface);
-      border-right: 1px solid var(--border);
       overflow-y: auto;
+      padding: 16px 20px;
       scrollbar-width: thin;
       scrollbar-color: var(--border) transparent;
     }
 
-    .left::-webkit-scrollbar { width: 4px; }
-    .left::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-    .section-label {
-      padding: 16px 16px 8px;
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      border-top: 1px solid var(--border);
-    }
-
-    .section-label:first-child { border-top: none; }
-
-    .route-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 16px;
-      cursor: pointer;
-      transition: background 0.1s;
-      border-left: 2px solid transparent;
-    }
-
-    .route-item:hover { background: var(--surface2); }
-
-    .route-item.active {
-      background: var(--surface2);
-      border-left-color: var(--green);
-    }
-
-    .method {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 500;
-      padding: 2px 6px;
-      border-radius: 4px;
-      min-width: 42px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-
-    .GET    { background: rgba(31,111,235,0.15); color: #79c0ff; }
-    .POST   { background: rgba(35,134,54,0.15);  color: #56d364; }
-    .PUT    { background: rgba(210,153,34,0.15); color: #e3b341; }
-    .DELETE { background: rgba(218,54,51,0.15);  color: #ff7b72; }
-
-    .route-path {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: var(--text);
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .route-desc {
-      font-size: 10px;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .run-btn {
-      background: var(--green);
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      padding: 4px 10px;
+    .field-label {
       font-size: 11px;
       font-weight: 500;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background 0.15s, opacity 0.15s;
-      font-family: 'Inter', sans-serif;
+      color: var(--muted);
+      margin-bottom: 5px;
+      margin-top: 14px;
     }
 
-    .run-btn:hover { background: #2ea043; }
-    .run-btn:active { opacity: 0.8; }
-    .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .field-label:first-child { margin-top: 0; }
 
-    /* BODY SECTION pour les requetes qui ont un body */
-    .body-section {
-      display: none;
-      padding: 0 16px 10px;
-    }
-
-    .body-section.visible { display: block; }
-
-    .body-textarea {
+    .token-input {
       width: 100%;
-      background: var(--surface2);
+      background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 8px 10px;
+      padding: 7px 12px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
       color: var(--text);
-      resize: vertical;
-      min-height: 70px;
       outline: none;
       transition: border-color 0.15s;
     }
 
-    .body-textarea:focus { border-color: var(--green); }
+    .token-input:focus { border-color: var(--green); }
+    .token-input::placeholder { color: var(--muted2); }
 
-    .body-label {
-      font-size: 10px;
+    .token-hint {
+      font-size: 11px;
       color: var(--muted);
-      margin-bottom: 5px;
+      margin-top: 5px;
+    }
+
+    .token-hint a {
+      color: var(--green);
+      text-decoration: none;
       font-weight: 500;
     }
 
-    /* RIGHT PANEL */
-    .right {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background: var(--terminal);
+    .token-hint a:hover { text-decoration: underline; }
+
+    .body-textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text);
+      resize: vertical;
+      min-height: 90px;
+      outline: none;
+      transition: border-color 0.15s;
+      line-height: 1.6;
+    }
+
+    .body-textarea:focus { border-color: var(--green); }
+
+    .params-table {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 6px;
       overflow: hidden;
     }
 
-    .terminal-header {
+    .params-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 10px 16px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .params-row:last-child { border-bottom: none; }
+
+    .param-name {
+      width: 120px;
+      padding: 7px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      border-right: 1px solid var(--border-light);
+      background: var(--bg);
       flex-shrink: 0;
     }
 
-    .terminal-title {
+    .param-input {
+      flex: 1;
+      padding: 7px 12px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: var(--muted);
+      font-size: 11px;
+      color: var(--text);
+      border: none;
+      background: var(--white);
+      outline: none;
+    }
+
+    .center-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: space-between;
+      flex-shrink: 0;
     }
+
+    .desc-text {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .run-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--green-btn);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .run-btn:hover { background: var(--green-hover); }
+    .run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .run-icon { font-size: 10px; }
+
+    /* RIGHT PANEL - RESPONSE */
+    .response-panel {
+      width: 480px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--terminal-bg);
+      overflow: hidden;
+    }
+
+    .response-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      height: 42px;
+      border-bottom: 1px solid #1f1f1f;
+      flex-shrink: 0;
+    }
+
+    .response-tabs {
+      display: flex;
+      gap: 2px;
+    }
+
+    .tab {
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #6b7280;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.1s, color 0.1s;
+    }
+
+    .tab.active {
+      background: #1f1f1f;
+      color: var(--terminal-text);
+    }
+
+    .tab:hover:not(.active) { color: var(--terminal-text); }
 
     .terminal-dots {
       display: flex;
       gap: 5px;
+      align-items: center;
     }
 
     .terminal-dots span {
-      width: 10px;
-      height: 10px;
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
     }
 
@@ -321,145 +441,191 @@
 
     .clear-btn {
       background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      padding: 3px 10px;
-      font-size: 11px;
-      color: var(--muted);
+      border: 1px solid #2a2a2a;
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 10px;
+      color: #6b7280;
       cursor: pointer;
       font-family: 'Inter', sans-serif;
       transition: border-color 0.15s, color 0.15s;
     }
 
-    .clear-btn:hover { border-color: var(--text); color: var(--text); }
+    .clear-btn:hover { border-color: #444; color: var(--terminal-text); }
 
-    .terminal-body {
+    .response-body {
       flex: 1;
       overflow-y: auto;
       padding: 16px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      line-height: 1.7;
+      font-size: 11px;
+      line-height: 1.8;
       scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
+      scrollbar-color: #2a2a2a transparent;
     }
 
-    .terminal-body::-webkit-scrollbar { width: 4px; }
-    .terminal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .response-body::-webkit-scrollbar { width: 3px; }
+    .response-body::-webkit-scrollbar-thumb { background: #2a2a2a; }
 
-    .terminal-placeholder {
-      color: var(--muted);
+    .placeholder-msg {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100%;
-      gap: 10px;
+      gap: 12px;
       text-align: center;
+      color: #3a3a3a;
     }
 
-    .terminal-placeholder .icon {
-      font-size: 32px;
-      opacity: 0.3;
+    .placeholder-msg .ph-icon {
+      font-size: 28px;
+      opacity: 0.4;
+      color: var(--terminal-green);
     }
 
-    .terminal-placeholder p {
-      font-size: 12px;
-      opacity: 0.5;
+    .placeholder-msg p {
+      font-size: 11px;
+      color: #4a4a4a;
+      line-height: 1.6;
     }
 
-    .log-entry { margin-bottom: 20px; }
+    .log-entry { margin-bottom: 18px; }
 
-    .log-request {
-      color: var(--muted);
-      margin-bottom: 6px;
+    .log-meta {
       display: flex;
       align-items: center;
       gap: 8px;
+      margin-bottom: 8px;
+      color: #4b5563;
+      font-size: 10px;
     }
 
-    .log-arrow { color: var(--green-bright); }
+    .log-prompt { color: var(--terminal-green); }
+    .log-path   { color: #9ca3af; }
+    .log-status-ok   { color: var(--terminal-green); font-weight: 500; }
+    .log-status-warn { color: #fbbf24; font-weight: 500; }
+    .log-status-err  { color: #f87171; font-weight: 500; }
+    .log-duration    { color: #374151; }
 
-    .log-status-ok  { color: var(--green-bright); }
-    .log-status-err { color: #ff7b72; }
-    .log-status-warn { color: #e3b341; }
-
-    .log-time { color: #444c56; font-size: 10px; }
-
-    .log-body {
-      color: var(--green-bright);
+    .log-json {
       white-space: pre-wrap;
       word-break: break-all;
+      color: var(--terminal-text);
+      font-size: 11px;
+      line-height: 1.7;
+      padding: 10px 12px;
+      background: #111111;
+      border-radius: 6px;
+      border-left: 2px solid #1f1f1f;
     }
 
-    .log-error-body { color: #ff7b72; white-space: pre-wrap; }
+    .log-json.ok   { border-left-color: var(--terminal-green); }
+    .log-json.err  { border-left-color: #f87171; color: #f87171; }
+    .log-json.warn { border-left-color: #fbbf24; color: #fbbf24; }
 
     .log-divider {
       border: none;
-      border-top: 1px solid #21262d;
-      margin: 16px 0;
+      border-top: 1px solid #161616;
+      margin-top: 16px;
     }
 
-    .loading-dots::after {
+    .loading-anim::after {
       content: '';
-      animation: dots 1.2s steps(3, end) infinite;
+      animation: ldots 1s steps(3, end) infinite;
     }
 
-    @keyframes dots {
+    @keyframes ldots {
       0%   { content: '.'; }
       33%  { content: '..'; }
       66%  { content: '...'; }
       100% { content: ''; }
     }
+
+    /* Scrollbars */
+    .center-body::-webkit-scrollbar { width: 3px; }
+    .center-body::-webkit-scrollbar-thumb { background: var(--border); }
   </style>
 </head>
 <body>
 
+<!-- HEADER -->
 <header>
   <div class="header-left">
     <div class="logo">CM</div>
-    <span class="header-title">CommitMind</span>
-    <span class="header-subtitle">API Playground</span>
+    <span class="header-brand">CommitMind</span>
+    <span class="header-tag">API Playground</span>
   </div>
-  <div class="status-dot">
-    <span class="dot"></span>
-    Live — commitmind.onrender.com
+  <div class="header-right">
+    <div class="live-badge">
+      <span class="live-dot"></span>
+      commitmind.onrender.com
+    </div>
   </div>
 </header>
 
-<div class="token-bar">
-  <span class="token-label">JWT Token</span>
-  <input
-    class="token-input"
-    id="tokenInput"
-    type="password"
-    placeholder="Paste your token here after login with GitHub..."
-  />
-  <span class="token-hint">
-    No token yet? <a href="/auth/github" target="_blank">Login with GitHub</a> to get one.
-  </span>
-</div>
+<div class="layout">
 
-<div class="main">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar"></div>
 
-  <!-- LEFT : liste des routes -->
-  <div class="left" id="routeList"></div>
+  <!-- CENTER PANEL -->
+  <div class="center">
+    <div class="center-header">
+      <div class="center-title" id="centerTitle">Select a request</div>
+      <div class="request-line">
+        <span class="request-method GET method-badge" id="centerMethod">GET</span>
+        <input class="request-url" id="centerUrl" type="text" readonly value="https://commitmind.onrender.com" />
+      </div>
+    </div>
 
-  <!-- RIGHT : terminal -->
-  <div class="right">
-    <div class="terminal-header">
+    <div class="center-body" id="centerBody">
+
+      <!-- TOKEN -->
+      <div class="field-label">JWT Token</div>
+      <input
+        class="token-input"
+        id="tokenInput"
+        type="password"
+        placeholder="Paste your token here after login with GitHub..."
+      />
+      <div class="token-hint">
+        No token yet? <a href="/auth/github" target="_blank">Login with GitHub</a> to get one.
+      </div>
+
+      <!-- PARAMS (injecté dynamiquement) -->
+      <div id="paramsSection"></div>
+
+      <!-- BODY (injecté dynamiquement) -->
+      <div id="bodySection"></div>
+
+    </div>
+
+    <div class="center-footer">
+      <span class="desc-text" id="centerDesc">Choose a request from the sidebar to get started.</span>
+      <button class="run-btn" id="runBtn" onclick="runCurrent()">
+        <span class="run-icon">&#9654;</span> Run
+      </button>
+    </div>
+  </div>
+
+  <!-- RESPONSE PANEL -->
+  <div class="response-panel">
+    <div class="response-header">
       <div class="terminal-dots">
         <span class="td-red"></span>
         <span class="td-yellow"></span>
         <span class="td-green"></span>
       </div>
-      <div class="terminal-title">response output</div>
+      <div class="response-tabs">
+        <div class="tab active">RESPONSE</div>
+      </div>
       <button class="clear-btn" onclick="clearTerminal()">Clear</button>
     </div>
-    <div class="terminal-body" id="terminal">
-      <div class="terminal-placeholder" id="placeholder">
-        <div class="icon">&#x276F;_</div>
-        <p>Select a request on the left and hit Run<br>to see the response here.</p>
+    <div class="response-body" id="terminal">
+      <div class="placeholder-msg" id="placeholder">
+        <div class="ph-icon">&#x276F;_</div>
+        <p>Hit Run to see<br>the response here.</p>
       </div>
     </div>
   </div>
@@ -469,12 +635,11 @@
 <script>
   const BASE = window.location.origin
 
-  // Définition de toutes les routes
   const ROUTES = [
     {
       section: 'Health',
       routes: [
-        { method: 'GET', path: '/health', desc: 'API status', auth: false }
+        { method: 'GET', path: '/health', desc: 'Check API status', auth: false }
       ]
     },
     {
@@ -495,7 +660,7 @@
     {
       section: 'Commits',
       routes: [
-        { method: 'POST', path: '/repositories/:repoId/commits/sync', desc: 'Sync commits', auth: true, params: ['repoId'] },
+        { method: 'POST', path: '/repositories/:repoId/commits/sync', desc: 'Sync commits from GitHub', auth: true, params: ['repoId'] },
         { method: 'GET',  path: '/repositories/:repoId/commits', desc: 'List commits', auth: true, params: ['repoId'] },
         { method: 'POST', path: '/repositories/:repoId/commits/:commitId/files/sync', desc: 'Sync commit files', auth: true, params: ['repoId', 'commitId'] },
         { method: 'GET',  path: '/repositories/:repoId/commits/:commitId/files', desc: 'List commit files', auth: true, params: ['repoId', 'commitId'] }
@@ -509,261 +674,217 @@
         { method: 'GET',    path: '/concepts/:id', desc: 'Get a concept', auth: true, params: ['id'] },
         { method: 'PUT',    path: '/concepts/:id', desc: 'Update a concept', auth: true, params: ['id'], body: '{\n  "name": "JWT Authentication",\n  "description": "Updated description"\n}' },
         { method: 'DELETE', path: '/concepts/:id', desc: 'Delete a concept', auth: true, params: ['id'] },
-        { method: 'GET',    path: '/concepts/:conceptId/commits', desc: 'Commits by concept', auth: true, params: ['conceptId'] }
+        { method: 'GET',    path: '/concepts/:conceptId/commits', desc: 'Commits linked to a concept', auth: true, params: ['conceptId'] }
       ]
     },
     {
       section: 'Linking',
       routes: [
-        { method: 'POST',   path: '/repositories/:repoId/commits/:commitId/concepts', desc: 'Link concept manually', auth: true, params: ['repoId', 'commitId'], body: '{\n  "conceptId": 1\n}' },
+        { method: 'POST',   path: '/repositories/:repoId/commits/:commitId/concepts', desc: 'Link a concept manually', auth: true, params: ['repoId', 'commitId'], body: '{\n  "conceptId": 1\n}' },
         { method: 'POST',   path: '/repositories/:repoId/commits/:commitId/concepts/auto', desc: 'Auto-detect concepts', auth: true, params: ['repoId', 'commitId'] },
-        { method: 'DELETE', path: '/repositories/:repoId/commits/:commitId/concepts/:conceptId', desc: 'Unlink concept', auth: true, params: ['repoId', 'commitId', 'conceptId'] }
+        { method: 'DELETE', path: '/repositories/:repoId/commits/:commitId/concepts/:conceptId', desc: 'Unlink a concept', auth: true, params: ['repoId', 'commitId', 'conceptId'] }
       ]
     },
     {
       section: 'History & Stats',
       routes: [
-        { method: 'GET', path: '/history', desc: 'Learning timeline', auth: true },
-        { method: 'GET', path: '/stats',   desc: 'Progression stats', auth: true }
+        { method: 'GET', path: '/history', desc: 'Learning timeline grouped by month', auth: true },
+        { method: 'GET', path: '/stats',   desc: 'Progression statistics', auth: true }
       ]
     }
   ]
 
-  // Génère la liste de routes dans le panneau gauche
-  function buildRouteList() {
-    const container = document.getElementById('routeList')
+  let currentRoute = null
+  let paramInputs = {}
+
+  function buildSidebar() {
+    const sidebar = document.getElementById('sidebar')
 
     ROUTES.forEach(group => {
       const label = document.createElement('div')
-      label.className = 'section-label'
+      label.className = 'sidebar-section-label'
       label.textContent = group.section
-      container.appendChild(label)
+      sidebar.appendChild(label)
 
       group.routes.forEach(route => {
         const item = document.createElement('div')
-        item.className = 'route-item'
+        item.className = 'sidebar-item'
+        item.dataset.path = route.path
+        item.dataset.method = route.method
 
-        const method = document.createElement('span')
-        method.className = `method ${route.method}`
-        method.textContent = route.method
+        const badge = document.createElement('span')
+        badge.className = `method-badge ${route.method}`
+        badge.textContent = route.method
 
         const path = document.createElement('span')
-        path.className = 'route-path'
+        path.className = 'sidebar-path'
         path.textContent = route.path
 
-        const desc = document.createElement('span')
-        desc.className = 'route-desc'
-        desc.textContent = route.desc
-
-        const btn = document.createElement('button')
-        btn.className = 'run-btn'
-        btn.textContent = 'Run'
-        btn.onclick = (e) => {
-          e.stopPropagation()
-          // Ouvre GitHub dans un nouvel onglet au lieu d'appeler l'API en fetch
-          if (route.external) {
-            window.open(BASE + route.path, '_blank')
-            return
-          }
-          runRoute(route, btn, bodyArea ? bodyArea.value : null)
-        }
-
-        item.appendChild(method)
+        item.appendChild(badge)
         item.appendChild(path)
-        item.appendChild(desc)
-
-        // Champ body pour les routes qui en ont besoin
-        let bodyArea = null
-        if (route.body) {
-          const bodyWrap = document.createElement('div')
-          bodyWrap.className = 'body-section visible'
-
-          const bodyLabel = document.createElement('div')
-          bodyLabel.className = 'body-label'
-          bodyLabel.textContent = 'Request body (JSON)'
-
-          bodyArea = document.createElement('textarea')
-          bodyArea.className = 'body-textarea'
-          bodyArea.value = route.body
-          bodyArea.rows = 4
-
-          bodyWrap.appendChild(bodyLabel)
-          bodyWrap.appendChild(bodyArea)
-
-          // Le bouton run doit capturer bodyArea dans sa closure
-          btn.onclick = (e) => {
-            e.stopPropagation()
-            runRoute(route, btn, bodyArea.value)
-          }
-
-          item.appendChild(btn)
-          container.appendChild(item)
-          container.appendChild(bodyWrap)
-        } else {
-          item.appendChild(btn)
-          container.appendChild(item)
-        }
+        item.addEventListener('click', () => selectRoute(route, item))
+        sidebar.appendChild(item)
       })
     })
   }
 
-  // Remplace les :param dans le path en demandant leur valeur
-  function resolvePath(route) {
-    let path = route.path
+  function selectRoute(route, el) {
+    // Mettre à jour la sidebar
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'))
+    el.classList.add('active')
 
-    if (!route.params || route.params.length === 0) return path
+    currentRoute = route
+    paramInputs = {}
 
-    for (const param of route.params) {
-      const value = prompt(`Enter value for :${param}`)
-      if (value === null) return null
-      path = path.replace(`:${param}`, value.trim())
+    // Mettre à jour le header center
+    document.getElementById('centerTitle').textContent = route.desc
+    const methodEl = document.getElementById('centerMethod')
+    methodEl.className = `request-method method-badge ${route.method}`
+    methodEl.textContent = route.method
+    document.getElementById('centerUrl').value = BASE + route.path
+    document.getElementById('centerDesc').textContent = route.desc
+
+    // Params
+    const paramsSection = document.getElementById('paramsSection')
+    paramsSection.innerHTML = ''
+
+    if (route.params && route.params.length > 0) {
+      const label = document.createElement('div')
+      label.className = 'field-label'
+      label.textContent = 'Path parameters'
+      paramsSection.appendChild(label)
+
+      const table = document.createElement('div')
+      table.className = 'params-table'
+
+      route.params.forEach(param => {
+        const row = document.createElement('div')
+        row.className = 'params-row'
+
+        const name = document.createElement('div')
+        name.className = 'param-name'
+        name.textContent = `:${param}`
+
+        const input = document.createElement('input')
+        input.className = 'param-input'
+        input.type = 'text'
+        input.placeholder = `Enter ${param}...`
+        input.addEventListener('input', updateUrl)
+
+        paramInputs[param] = input
+
+        row.appendChild(name)
+        row.appendChild(input)
+        table.appendChild(row)
+      })
+
+      paramsSection.appendChild(table)
     }
 
-    return path
+    // Body
+    const bodySection = document.getElementById('bodySection')
+    bodySection.innerHTML = ''
+
+    if (route.body) {
+      const label = document.createElement('div')
+      label.className = 'field-label'
+      label.textContent = 'Request body (JSON)'
+
+      const textarea = document.createElement('textarea')
+      textarea.className = 'body-textarea'
+      textarea.value = route.body
+      textarea.id = 'bodyTextarea'
+
+      bodySection.appendChild(label)
+      bodySection.appendChild(textarea)
+    }
   }
 
-  // Lance la requête et affiche le résultat dans le terminal
-  async function runRoute(route, btn, bodyValue) {
-    const token = document.getElementById('tokenInput').value.trim()
-
-    if (route.auth && !token) {
-      appendLog(route, null, null, 'No token provided. Paste your JWT token in the field above.')
-      return
+  function updateUrl() {
+    if (!currentRoute) return
+    let path = currentRoute.path
+    for (const [param, input] of Object.entries(paramInputs)) {
+      const val = input.value.trim() || `:${param}`
+      path = path.replace(`:${param}`, val)
     }
+    document.getElementById('centerUrl').value = BASE + path
+  }
 
-    const resolvedPath = resolvePath(route)
-    if (resolvedPath === null) return
-
-    const url = BASE + resolvedPath
-    const headers = { 'Content-Type': 'application/json' }
-    if (route.auth && token) headers['Authorization'] = `Bearer ${token}`
-
-    const options = { method: route.method, headers }
-
-    if (bodyValue && (route.method === 'POST' || route.method === 'PUT')) {
-      try {
-        JSON.parse(bodyValue)
-        options.body = bodyValue
-      } catch {
-        appendLog(route, resolvedPath, null, 'Invalid JSON in request body.')
-        return
+  function resolvePath() {
+    if (!currentRoute) return null
+    let path = currentRoute.path
+    for (const [param, input] of Object.entries(paramInputs)) {
+      const val = input.value.trim()
+      if (!val) {
+        alert(`Please fill in the parameter: ${param}`)
+        return null
       }
+      path = path.replace(`:${param}`, val)
     }
-
-    btn.disabled = true
-    btn.textContent = 'Running'
-
-    const startTime = Date.now()
-    appendLoading(route, resolvedPath)
-
-    try {
-      const res = await fetch(url, options)
-      const duration = Date.now() - startTime
-      let data
-
-      const contentType = res.headers.get('content-type') || ''
-      if (contentType.includes('application/json')) {
-        data = await res.json()
-      } else {
-        data = await res.text()
-      }
-
-      updateLoading(route, resolvedPath, res.status, data, duration)
-    } catch (err) {
-      updateLoadingError(route, resolvedPath, err.message)
-    } finally {
-      btn.disabled = false
-      btn.textContent = 'Run'
-    }
+    return path
   }
 
   let loadingId = null
 
-  function appendLoading(route, resolvedPath) {
-    hidePlaceholder()
-    const terminal = document.getElementById('terminal')
+  async function runCurrent() {
+    if (!currentRoute) {
+      alert('Please select a request from the sidebar first.')
+      return
+    }
+
+    if (currentRoute.external) {
+      window.open(BASE + currentRoute.path, '_blank')
+      return
+    }
+
+    const token = document.getElementById('tokenInput').value.trim()
+    if (currentRoute.auth && !token) {
+      appendError(currentRoute, currentRoute.path, 'No token provided. Paste your JWT token above.')
+      return
+    }
+
+    const resolvedPath = resolvePath()
+    if (!resolvedPath) return
+
+    const headers = { 'Content-Type': 'application/json' }
+    if (currentRoute.auth && token) headers['Authorization'] = `Bearer ${token}`
+
+    const options = { method: currentRoute.method, headers }
+
+    const bodyTextarea = document.getElementById('bodyTextarea')
+    if (bodyTextarea && (currentRoute.method === 'POST' || currentRoute.method === 'PUT')) {
+      try {
+        JSON.parse(bodyTextarea.value)
+        options.body = bodyTextarea.value
+      } catch {
+        appendError(currentRoute, resolvedPath, 'Invalid JSON in request body.')
+        return
+      }
+    }
+
+    const btn = document.getElementById('runBtn')
+    btn.disabled = true
+    btn.innerHTML = '<span class="run-icon loading-anim">Running</span>'
 
     const id = `log-${Date.now()}`
     loadingId = id
+    appendLoading(currentRoute, resolvedPath, id)
 
-    const entry = document.createElement('div')
-    entry.className = 'log-entry'
-    entry.id = id
+    const start = Date.now()
 
-    entry.innerHTML = `
-      <div class="log-request">
-        <span class="log-arrow">&#x276F;</span>
-        <span class="method ${route.method}" style="font-family:JetBrains Mono,monospace;font-size:10px;padding:2px 6px;border-radius:4px;">${route.method}</span>
-        <span style="color:#e6edf3">${resolvedPath}</span>
-      </div>
-      <div class="log-body loading-dots">Waiting</div>
-    `
-
-    terminal.appendChild(entry)
-    terminal.scrollTop = terminal.scrollHeight
-  }
-
-  function updateLoading(route, resolvedPath, status, data, duration) {
-    const entry = document.getElementById(loadingId)
-    if (!entry) return
-
-    const isOk = status >= 200 && status < 300
-    const isWarn = status >= 400 && status < 500
-    const statusClass = isOk ? 'log-status-ok' : isWarn ? 'log-status-warn' : 'log-status-err'
-    const bodyClass = isOk ? 'log-body' : 'log-error-body'
-
-    const formatted = typeof data === 'string' ? data : JSON.stringify(data, null, 2)
-
-    entry.innerHTML = `
-      <div class="log-request">
-        <span class="log-arrow">&#x276F;</span>
-        <span class="method ${route.method}" style="font-family:JetBrains Mono,monospace;font-size:10px;padding:2px 6px;border-radius:4px;">${route.method}</span>
-        <span style="color:#e6edf3">${resolvedPath}</span>
-        <span class="${statusClass}">${status}</span>
-        <span class="log-time">${duration}ms</span>
-      </div>
-      <div class="${bodyClass}">${escapeHtml(formatted)}</div>
-      <hr class="log-divider" />
-    `
-
-    const terminal = document.getElementById('terminal')
-    terminal.scrollTop = terminal.scrollHeight
-  }
-
-  function updateLoadingError(route, resolvedPath, message) {
-    const entry = document.getElementById(loadingId)
-    if (!entry) return
-
-    entry.innerHTML = `
-      <div class="log-request">
-        <span class="log-arrow">&#x276F;</span>
-        <span class="method ${route.method}" style="font-family:JetBrains Mono,monospace;font-size:10px;padding:2px 6px;border-radius:4px;">${route.method}</span>
-        <span style="color:#e6edf3">${resolvedPath}</span>
-        <span class="log-status-err">Network Error</span>
-      </div>
-      <div class="log-error-body">${escapeHtml(message)}</div>
-      <hr class="log-divider" />
-    `
-  }
-
-  function appendLog(route, resolvedPath, status, message) {
-    hidePlaceholder()
-    const terminal = document.getElementById('terminal')
-
-    const entry = document.createElement('div')
-    entry.className = 'log-entry'
-    entry.innerHTML = `
-      <div class="log-request">
-        <span class="log-arrow">&#x276F;</span>
-        <span style="color:#e6edf3">${resolvedPath || route.path}</span>
-        <span class="log-status-warn">Warning</span>
-      </div>
-      <div class="log-error-body">${escapeHtml(message)}</div>
-      <hr class="log-divider" />
-    `
-
-    terminal.appendChild(entry)
-    terminal.scrollTop = terminal.scrollHeight
+    try {
+      const res = await fetch(BASE + resolvedPath, options)
+      const duration = Date.now() - start
+      let data
+      const ct = res.headers.get('content-type') || ''
+      data = ct.includes('application/json') ? await res.json() : await res.text()
+      updateLoading(id, currentRoute, resolvedPath, res.status, data, duration)
+    } catch (err) {
+      updateLoadingFail(id, currentRoute, resolvedPath, err.message)
+    } finally {
+      btn.disabled = false
+      btn.innerHTML = '<span class="run-icon">&#9654;</span> Run'
+    }
   }
 
   function hidePlaceholder() {
@@ -771,12 +892,88 @@
     if (p) p.style.display = 'none'
   }
 
-  function clearTerminal() {
+  function appendLoading(route, path, id) {
+    hidePlaceholder()
     const terminal = document.getElementById('terminal')
-    terminal.innerHTML = `
-      <div class="terminal-placeholder" id="placeholder">
-        <div class="icon">&#x276F;_</div>
-        <p>Select a request on the left and hit Run<br>to see the response here.</p>
+    const entry = document.createElement('div')
+    entry.className = 'log-entry'
+    entry.id = id
+    entry.innerHTML = `
+      <div class="log-meta">
+        <span class="log-prompt">&#x276F;</span>
+        <span class="method-badge ${route.method}" style="font-size:9px;padding:1px 5px;">${route.method}</span>
+        <span class="log-path">${path}</span>
+      </div>
+      <div class="log-json loading-anim" style="color:#4b5563">Waiting</div>
+    `
+    terminal.appendChild(entry)
+    terminal.scrollTop = terminal.scrollHeight
+  }
+
+  function updateLoading(id, route, path, status, data, duration) {
+    const entry = document.getElementById(id)
+    if (!entry) return
+
+    const isOk   = status >= 200 && status < 300
+    const isWarn = status >= 400 && status < 500
+    const statusClass = isOk ? 'log-status-ok' : isWarn ? 'log-status-warn' : 'log-status-err'
+    const jsonClass   = isOk ? 'ok' : isWarn ? 'warn' : 'err'
+
+    const formatted = typeof data === 'string' ? data : JSON.stringify(data, null, 2)
+
+    entry.innerHTML = `
+      <div class="log-meta">
+        <span class="log-prompt">&#x276F;</span>
+        <span class="method-badge ${route.method}" style="font-size:9px;padding:1px 5px;">${route.method}</span>
+        <span class="log-path">${path}</span>
+        <span class="${statusClass}">${status}</span>
+        <span class="log-duration">${duration}ms</span>
+      </div>
+      <div class="log-json ${jsonClass}">${escapeHtml(formatted)}</div>
+      <hr class="log-divider" />
+    `
+    const terminal = document.getElementById('terminal')
+    terminal.scrollTop = terminal.scrollHeight
+  }
+
+  function updateLoadingFail(id, route, path, message) {
+    const entry = document.getElementById(id)
+    if (!entry) return
+    entry.innerHTML = `
+      <div class="log-meta">
+        <span class="log-prompt">&#x276F;</span>
+        <span class="method-badge ${route.method}" style="font-size:9px;padding:1px 5px;">${route.method}</span>
+        <span class="log-path">${path}</span>
+        <span class="log-status-err">Network Error</span>
+      </div>
+      <div class="log-json err">${escapeHtml(message)}</div>
+      <hr class="log-divider" />
+    `
+  }
+
+  function appendError(route, path, message) {
+    hidePlaceholder()
+    const terminal = document.getElementById('terminal')
+    const entry = document.createElement('div')
+    entry.className = 'log-entry'
+    entry.innerHTML = `
+      <div class="log-meta">
+        <span class="log-prompt">&#x276F;</span>
+        <span class="log-path">${path}</span>
+        <span class="log-status-warn">Warning</span>
+      </div>
+      <div class="log-json warn">${escapeHtml(message)}</div>
+      <hr class="log-divider" />
+    `
+    terminal.appendChild(entry)
+    terminal.scrollTop = terminal.scrollHeight
+  }
+
+  function clearTerminal() {
+    document.getElementById('terminal').innerHTML = `
+      <div class="placeholder-msg" id="placeholder">
+        <div class="ph-icon">&#x276F;_</div>
+        <p>Hit Run to see<br>the response here.</p>
       </div>
     `
   }
@@ -786,10 +983,9 @@
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
   }
 
-  buildRouteList()
+  buildSidebar()
 </script>
 </body>
 </html>

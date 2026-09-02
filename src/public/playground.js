@@ -172,20 +172,6 @@ function updateUrl() {
   document.getElementById('centerUrl').value = BASE + path
 }
 
-function resolvePath() {
-  if (!currentRoute) return null
-  let path = currentRoute.path
-  for (const [param, input] of Object.entries(paramInputs)) {
-    const val = input.value.trim()
-    if (!val) {
-      alert(`Please fill in the parameter: ${param}`)
-      return null
-    }
-    path = path.replace(`:${param}`, val)
-  }
-  return path
-}
-
 async function runCurrent() {
   if (!currentRoute) {
     alert('Please select a request from the sidebar first.')
@@ -199,12 +185,17 @@ async function runCurrent() {
 
   const token = document.getElementById('tokenInput').value.trim()
   if (currentRoute.auth && !token) {
-    appendError(currentRoute, currentRoute.path, 'No token provided. Paste your JWT token above.')
+    appendError(currentRoute, 'No token provided. Paste your JWT token above.')
     return
   }
 
-  const resolvedPath = resolvePath()
-  if (!resolvedPath) return
+  // On lit directement l'URL depuis l'input — ce que l'utilisateur
+  // a tapé ou modifié est ce qui sera réellement envoyé
+  const url = document.getElementById('centerUrl').value.trim()
+  if (!url) {
+    appendError(currentRoute, 'URL is empty.')
+    return
+  }
 
   const headers = { 'Content-Type': 'application/json' }
   if (currentRoute.auth && token) headers['Authorization'] = `Bearer ${token}`
@@ -217,7 +208,7 @@ async function runCurrent() {
       JSON.parse(bodyTextarea.value)
       options.body = bodyTextarea.value
     } catch {
-      appendError(currentRoute, resolvedPath, 'Invalid JSON in request body.')
+      appendError(currentRoute, 'Invalid JSON in request body.')
       return
     }
   }
@@ -228,18 +219,18 @@ async function runCurrent() {
 
   const id = `log-${Date.now()}`
   loadingId = id
-  appendLoading(currentRoute, resolvedPath, id)
+  appendLoading(currentRoute, url, id)
 
   const start = Date.now()
 
   try {
-    const res = await fetch(BASE + resolvedPath, options)
+    const res = await fetch(url, options)
     const duration = Date.now() - start
     const ct = res.headers.get('content-type') || ''
     const data = ct.includes('application/json') ? await res.json() : await res.text()
-    updateLoading(id, currentRoute, resolvedPath, res.status, data, duration)
+    updateLoading(id, currentRoute, url, res.status, data, duration)
   } catch (err) {
-    updateLoadingFail(id, currentRoute, resolvedPath, err.message)
+    updateLoadingFail(id, currentRoute, url, err.message)
   } finally {
     btn.disabled = false
     btn.innerHTML = '<span class="run-icon">&#9654;</span> Run'
@@ -251,7 +242,7 @@ function hidePlaceholder() {
   if (p) p.style.display = 'none'
 }
 
-function appendLoading(route, path, id) {
+function appendLoading(route, url, id) {
   hidePlaceholder()
   const terminal = document.getElementById('terminal')
   const entry = document.createElement('div')
@@ -261,7 +252,7 @@ function appendLoading(route, path, id) {
     <div class="log-meta">
       <span class="log-prompt">&#x276F;</span>
       <span class="method-badge ${route.method}" style="font-size:9px;padding:1px 5px;">${route.method}</span>
-      <span class="log-path">${path}</span>
+      <span class="log-path">${url}</span>
     </div>
     <div class="log-json loading-anim" style="color:#4b5563">Waiting</div>
   `
@@ -269,7 +260,7 @@ function appendLoading(route, path, id) {
   terminal.scrollTop = terminal.scrollHeight
 }
 
-function updateLoading(id, route, path, status, data, duration) {
+function updateLoading(id, route, url, status, data, duration) {
   const entry = document.getElementById(id)
   if (!entry) return
 
@@ -283,7 +274,7 @@ function updateLoading(id, route, path, status, data, duration) {
     <div class="log-meta">
       <span class="log-prompt">&#x276F;</span>
       <span class="method-badge ${route.method}" style="font-size:9px;padding:1px 5px;">${route.method}</span>
-      <span class="log-path">${path}</span>
+      <span class="log-path">${url}</span>
       <span class="${statusClass}">${status}</span>
       <span class="log-duration">${duration}ms</span>
     </div>
@@ -294,14 +285,14 @@ function updateLoading(id, route, path, status, data, duration) {
   terminal.scrollTop = terminal.scrollHeight
 }
 
-function updateLoadingFail(id, route, path, message) {
+function updateLoadingFail(id, route, url, message) {
   const entry = document.getElementById(id)
   if (!entry) return
   entry.innerHTML = `
     <div class="log-meta">
       <span class="log-prompt">&#x276F;</span>
       <span class="method-badge ${route.method}" style="font-size:9px;padding:1px 5px;">${route.method}</span>
-      <span class="log-path">${path}</span>
+      <span class="log-path">${url}</span>
       <span class="log-status-err">Network Error</span>
     </div>
     <div class="log-json err">${escapeHtml(message)}</div>
@@ -309,7 +300,7 @@ function updateLoadingFail(id, route, path, message) {
   `
 }
 
-function appendError(route, path, message) {
+function appendError(route, message) {
   hidePlaceholder()
   const terminal = document.getElementById('terminal')
   const entry = document.createElement('div')
@@ -317,7 +308,7 @@ function appendError(route, path, message) {
   entry.innerHTML = `
     <div class="log-meta">
       <span class="log-prompt">&#x276F;</span>
-      <span class="log-path">${path}</span>
+      <span class="log-path">${document.getElementById('centerUrl').value}</span>
       <span class="log-status-warn">Warning</span>
     </div>
     <div class="log-json warn">${escapeHtml(message)}</div>

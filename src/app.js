@@ -15,6 +15,9 @@ const app = express()
 app.use(express.json())
 app.use(passport.initialize())
 
+// Fichiers statiques du playground (CSS, JS)
+app.use(express.static(path.join(__dirname, 'public')))
+
 // Playground de test — servi sur la route racine
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'playground.html'))

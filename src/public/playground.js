@@ -63,6 +63,31 @@ let currentRoute = null
 let paramInputs = {}
 let loadingId = null
 
+// DARK THEME
+// Applique en premier avant tout rendu pour eviter le flash blanc.
+// On lit localStorage, on pose la classe sur body, et on met à jour
+// le label du bouton une fois le DOM pret.
+
+const savedTheme = localStorage.getItem('cm_theme')
+if (savedTheme === 'dark') {
+  document.body.classList.add('dark')
+}
+
+function applyThemeLabel() {
+  const label = document.getElementById('toggleLabel')
+  if (!label) return
+  label.textContent = document.body.classList.contains('dark') ? 'Light' : 'Dark'
+}
+
+function toggleTheme() {
+  const isDark = document.body.classList.contains('dark')
+  document.body.classList.toggle('dark')
+  localStorage.setItem('cm_theme', isDark ? 'light' : 'dark')
+  applyThemeLabel()
+}
+
+// SIDEBAR
+
 function buildSidebar() {
   const sidebar = document.getElementById('sidebar')
 
@@ -106,7 +131,6 @@ function selectRoute(route, el) {
   document.getElementById('centerUrl').value = BASE + route.path
   document.getElementById('centerDesc').textContent = route.desc
 
-  // Params
   const paramsSection = document.getElementById('paramsSection')
   paramsSection.innerHTML = ''
 
@@ -143,7 +167,6 @@ function selectRoute(route, el) {
     paramsSection.appendChild(table)
   }
 
-  // Body
   const bodySection = document.getElementById('bodySection')
   bodySection.innerHTML = ''
 
@@ -172,6 +195,8 @@ function updateUrl() {
   document.getElementById('centerUrl').value = BASE + path
 }
 
+// RUN
+
 async function runCurrent() {
   if (!currentRoute) {
     alert('Please select a request from the sidebar first.')
@@ -185,15 +210,13 @@ async function runCurrent() {
 
   const token = document.getElementById('tokenInput').value.trim()
   if (currentRoute.auth && !token) {
-    appendError(currentRoute, 'No token provided. Paste your JWT token above.')
+    appendError('No token provided. Paste your JWT token above.')
     return
   }
 
-  // On lit directement l'URL depuis l'input — ce que l'utilisateur
-  // a tape ou modifie est ce qui sera reellement envoye
   const url = document.getElementById('centerUrl').value.trim()
   if (!url) {
-    appendError(currentRoute, 'URL is empty.')
+    appendError('URL is empty.')
     return
   }
 
@@ -208,7 +231,7 @@ async function runCurrent() {
       JSON.parse(bodyTextarea.value)
       options.body = bodyTextarea.value
     } catch {
-      appendError(currentRoute, 'Invalid JSON in request body.')
+      appendError('Invalid JSON in request body.')
       return
     }
   }
@@ -236,6 +259,8 @@ async function runCurrent() {
     btn.innerHTML = '<span class="run-icon">&#9654;</span> Run'
   }
 }
+
+// TERMINAL
 
 function hidePlaceholder() {
   const p = document.getElementById('placeholder')
@@ -300,7 +325,7 @@ function updateLoadingFail(id, route, url, message) {
   `
 }
 
-function appendError(route, message) {
+function appendError(message) {
   hidePlaceholder()
   const terminal = document.getElementById('terminal')
   const entry = document.createElement('div')
@@ -334,31 +359,8 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
 }
 
+// INIT
+// applyThemeLabel est appele après buildSidebar pour s'assurer
+// que le DOM est entièrement pret avant de lire toggleLabel
 buildSidebar()
-
-// DARK THEME
-
-function applyTheme(dark) {
-  if (dark) {
-    document.body.classList.add('dark')
-    document.getElementById('toggleLabel').textContent = 'Light'
-  } else {
-    document.body.classList.remove('dark')
-    document.getElementById('toggleLabel').textContent = 'Dark'
-  }
-}
-
-function toggleTheme() {
-  const isDark = document.body.classList.contains('dark')
-  // On inverse le theme et on persiste le choix dans localStorage
-  // pour que la preference soit conservee entre les sessions
-  localStorage.setItem('cm_theme', isDark ? 'light' : 'dark')
-  applyTheme(!isDark)
-}
-
-// Applique le theme sauvegarde des le chargement de la page
-// pour eviter le flash blanc avant que le JS s'execute
-;(function initTheme() {
-  const saved = localStorage.getItem('cm_theme')
-  applyTheme(saved === 'dark')
-})()
+applyThemeLabel()

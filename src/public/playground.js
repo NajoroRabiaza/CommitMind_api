@@ -190,7 +190,7 @@ async function runCurrent() {
   }
 
   // On lit directement l'URL depuis l'input — ce que l'utilisateur
-  // a tapé ou modifié est ce qui sera réellement envoyé
+  // a tape ou modifie est ce qui sera reellement envoye
   const url = document.getElementById('centerUrl').value.trim()
   if (!url) {
     appendError(currentRoute, 'URL is empty.')
@@ -335,3 +335,30 @@ function escapeHtml(str) {
 }
 
 buildSidebar()
+
+// DARK THEME
+
+function applyTheme(dark) {
+  if (dark) {
+    document.body.classList.add('dark')
+    document.getElementById('toggleLabel').textContent = 'Light'
+  } else {
+    document.body.classList.remove('dark')
+    document.getElementById('toggleLabel').textContent = 'Dark'
+  }
+}
+
+function toggleTheme() {
+  const isDark = document.body.classList.contains('dark')
+  // On inverse le theme et on persiste le choix dans localStorage
+  // pour que la preference soit conservee entre les sessions
+  localStorage.setItem('cm_theme', isDark ? 'light' : 'dark')
+  applyTheme(!isDark)
+}
+
+// Applique le theme sauvegarde des le chargement de la page
+// pour eviter le flash blanc avant que le JS s'execute
+;(function initTheme() {
+  const saved = localStorage.getItem('cm_theme')
+  applyTheme(saved === 'dark')
+})()
